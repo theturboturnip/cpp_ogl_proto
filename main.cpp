@@ -1,12 +1,13 @@
 #define GL_GLEXT_PROTOTYPES
-//#include <GL/gl.h>
-//#include <GL/glext.h>
 #include <SDL2/SDL.h> 
 #include <SDL2/SDL_opengl.h>
 #include <iostream>
 #include "loadShader.cpp"
 #include <stdlib.h>
 #include <stdio.h>
+#include <glm/gtc/matrix_transform.hpp> 
+#include <glm/gtx/transform.hpp>
+#include <cstdlib>
 
 int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
 SDL_Window* window=NULL;
@@ -43,31 +44,29 @@ int CreateWindow(void){
   SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
   SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
 
-  fprintf(stderr,"Setting GL version etc\n");
+  fprintf(stderr,"Setting GL version and profile\n");
   SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
   SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   checkSDLError();
 
   int flags=SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-  window = SDL_CreateWindow("OpenGL Test",SDL_WINDOWPOS_UNDEFINED,0,SCREEN_WIDTH,SCREEN_HEIGHT,flags);
+  window = SDL_CreateWindow("OpenGL Test",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,SCREEN_WIDTH,SCREEN_HEIGHT,flags);
   if (window==NULL){
     ThrowSDLError();
     return 1;
   }
   glContext=  SDL_GL_CreateContext(window);
-  fprintf(stderr,"glContext %p\n",glContext);
   if (!glContext) {
     return 1;
   }
 
-  fprintf(stderr,"Getting GL attributes\n");
+  //fprintf(stderr,"Getting GL attributes\n");
   SDL_GL_GetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, &major );
   SDL_GL_GetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, &minor );
   checkSDLError();
-  fprintf(stderr,"SDL GL version %d.%d\n",major,minor);
+  fprintf(stderr, "Using OpenGL version %d.%d\n",major,minor);
 
-  //std::cout << (glContext==NULL) ;a
   return 0;
 }
 
@@ -76,7 +75,7 @@ void InitScene(void){
   glGenVertexArrays(1,&VertexArrayID);
   glBindVertexArray(VertexArrayID);
   GLfloat g_vertex_buffer_data[] = {
-    -1.0f,1.0f,0.0f,
+    -1.0f,-1.0f,0.0f,
     1.0f,-1.0f,0.0f,
     0.0f,1.0f,0.0f};
   glGenBuffers(1,&VertexBuffer);
@@ -118,7 +117,12 @@ void MainLoop(void){
   SDL_GL_SwapWindow(window);
 }
 
-int main(){
+int main(int argc,char *argv[]){
+  //fprintf(stderr, "Argument Count: %d\n",argc);
+  if (argc==3){
+    SCREEN_WIDTH=atoi(argv[1]);
+    SCREEN_HEIGHT=atoi(argv[2]);
+  }
   if (CreateWindow()==1) return 1;
   InitScene();
   while (!shouldEnd){
