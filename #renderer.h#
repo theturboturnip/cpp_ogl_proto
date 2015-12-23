@@ -1,0 +1,29 @@
+class OpenGLRenderer{
+ public :
+  OpenGLRenderer(int SCREEN_WIDTH,int SCREEN_HEIGHT);
+  bool Initialize();
+  void DrawObject(*Object obj);
+  
+ protected:
+  int width,height;
+};
+
+class Object{
+ publicL:
+
+class Shader
+{
+public:
+   bool loadShader(string sFile, int a_iType);
+   void deleteShader();
+
+   bool isLoaded();
+   UINT getShaderID();
+
+   CShader();
+
+private:
+   UINT uiShader; // ID of shader
+   int iType; // GL_VERTEX_SHADER, GL_FRAGMENT_SHADER...
+   bool bLoaded; // Whether shader was loaded and compiled
+};
