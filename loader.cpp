@@ -1,3 +1,4 @@
+#define GL_GLEXT_PROTOTYPES
 #include "loader.h"
 #include <iostream>
 #include <fstream>
