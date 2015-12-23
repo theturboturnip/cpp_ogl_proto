@@ -1,40 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <SDL2/SDL_opengl.h>
+#include <png.h>
 using namespace std;
 
-GLuint LoadShaderFromFile(string path,GLenum shaderType);
+/*
 
-GLuint LoadShadersIntoProgram(string vertexPath,string fragPath,GLuint program=0){
-  if(program==0)
-    program=glCreateProgram();
-  GLuint vertexShader=LoadShaderFromFile(vertexPath,GL_VERTEX_SHADER);
-  if(vertexShader!=0) 
-    glAttachShader(program,vertexShader);
-  else return 0;
-  GLuint fragShader=LoadShaderFromFile(fragPath,GL_FRAGMENT_SHADER);
-  if(fragShader!=0) 
-    glAttachShader(program,fragShader);
-  else return 0;
-  glLinkProgram(program);
-  //Check program has linked properly
-  GLint linkResult=GL_FALSE;
-  int linkInfoLength;
-  glGetProgramiv(program,GL_LINK_STATUS,&linkResult);
-  glGetProgramiv(program,GL_INFO_LOG_LENGTH, &linkInfoLength);
-  if (linkResult==GL_FALSE){
-    //Program linkage has failed
-    char ErrorMessage[linkInfoLength+1];
-    glGetProgramInfoLog(program,linkInfoLength,NULL,ErrorMessage);
-    fprintf(stderr,"%s\n",ErrorMessage);
-    return 0;
-  }
-  glDetachShader(program,vertexShader);
-  glDetachShader(program,fragShader);
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragShader);
-  return program;
-}
+Shader Loading
+
+ */
 
 GLuint LoadShaderFromFile(string pathString,GLenum shaderType){
   //Read all text
@@ -70,3 +44,41 @@ GLuint LoadShaderFromFile(string pathString,GLenum shaderType){
   //Send Shader ID
   return ShaderID;
 }
+
+GLuint LoadShadersIntoProgram(string vertexPath,string fragPath,GLuint program=0){
+  if(program==0)
+    program=glCreateProgram();
+  GLuint vertexShader=LoadShaderFromFile(vertexPath,GL_VERTEX_SHADER);
+  if(vertexShader!=0) 
+    glAttachShader(program,vertexShader);
+  else return 0;
+  GLuint fragShader=LoadShaderFromFile(fragPath,GL_FRAGMENT_SHADER);
+  if(fragShader!=0) 
+    glAttachShader(program,fragShader);
+  else return 0;
+  glLinkProgram(program);
+  //Check program has linked properly
+  GLint linkResult=GL_FALSE;
+  int linkInfoLength;
+  glGetProgramiv(program,GL_LINK_STATUS,&linkResult);
+  glGetProgramiv(program,GL_INFO_LOG_LENGTH, &linkInfoLength);
+  if (linkResult==GL_FALSE){
+    //Program linkage has failed
+    char ErrorMessage[linkInfoLength+1];
+    glGetProgramInfoLog(program,linkInfoLength,NULL,ErrorMessage);
+    fprintf(stderr,"%s\n",ErrorMessage);
+    return 0;
+  }
+  glDetachShader(program,vertexShader);
+  glDetachShader(program,fragShader);
+  glDeleteShader(vertexShader);
+  glDeleteShader(fragShader);
+  return program;
+}
+
+/*
+
+Texture Loading
+
+ */
+

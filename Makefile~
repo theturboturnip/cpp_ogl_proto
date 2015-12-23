@@ -1,8 +1,0 @@
-
-all: prog
-
-prog: main.o
-	g++ -o prog main.o -lSDL2main -lSDL2 -lGL
-
-main.o: main.cpp
-	g++ -c main.cpp -o main.o -I/usr/local/include
