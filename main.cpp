@@ -10,11 +10,12 @@
 #include <cstdlib>
 
 int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
+float FOV=45;
 SDL_Window* window=NULL;
 SDL_GLContext glContext;
 bool shouldEnd=false;
 SDL_Event e;
-GLuint VertexArrayID,VertexBuffer,ShaderProgramID;
+GLuint VertexArrayID,VertexBuffer,ShaderProgramID,MatrixID;
 
 void checkSDLError(void)
 {
@@ -24,6 +25,20 @@ void checkSDLError(void)
 		fprintf(stderr,"SDL Error: %s\n", error);
 		SDL_ClearError();
 	}
+}
+
+glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip){
+  float FOVrads=glm::radians(FOV),aspect=(float)SCREEN_WIDTH/(float)SCREEN_HEIGHT;
+  return glm::perspective(FOVrads,aspect,zNearClip,zFarClip);
+}
+
+glm::mat4 FindViewMatrix(){
+  return glm::lookAt(glm::vec3(4,3,3),
+		     glm::vec3(0,0,0),
+		     glm::vec3(0,1,0));
+}
+glm::mat4 FindModelMatrix(){
+  return glm::mat4(1.0f);
 }
 
 void ThrowSDLError(void){
@@ -61,7 +76,6 @@ int CreateWindow(void){
     return 1;
   }
 
-  //fprintf(stderr,"Getting GL attributes\n");
   SDL_GL_GetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, &major );
   SDL_GL_GetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, &minor );
   checkSDLError();
@@ -81,8 +95,11 @@ void InitScene(void){
   glGenBuffers(1,&VertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-  ShaderProgramID=LoadShaders("SimpleVertexShader.glsl","SimpleFragmentShader.glsl");
-  
+  ShaderProgramID=LoadShaders("MatrixVertexShader.glsl","SimpleFragmentShader.glsl");
+  //Getting MVP, giving to shader
+  MatrixID=glGetUniformLocation(ShaderProgramID, "MVP");
+  glm::mat4 MVP=FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix()*FindModelMatrix();
+  glUniformMatrix4fv(MatrixID,1,GL_FALSE,&MVP[0][0]);
 }
 /*Basic object creation
  need vertex shader + fragment shader for entire object
