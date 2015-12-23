@@ -1,4 +1,5 @@
 #define GL_GLEXT_PROTOTYPES
+#define GLM_FORCE_RADIANS
 #include <SDL2/SDL.h> 
 #include <SDL2/SDL_opengl.h>
 #include <iostream>
@@ -30,6 +31,8 @@ void checkSDLError(void)
 
 glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip){
   float FOVrads=glm::radians(FOV),aspect=(float)SCREEN_WIDTH/(float)SCREEN_HEIGHT;
+  fprintf(stderr,//"FOV: %f\nFOV Radians: %f\nAspect: %f\n",FOV,FOVrads,aspect); 
+	  "Z Near: %f\nZ Far:%f\n",zNearClip,zFarClip);
   return glm::perspective(FOVrads,aspect,zNearClip,zFarClip);
 }
 
@@ -39,7 +42,7 @@ glm::mat4 FindViewMatrix(){
 		     glm::vec3(0,1,0));
 }
 glm::mat4 FindModelMatrix(){
-  return glm::mat4(1.0f);
+  return glm::mat4(12.0f);
 }
 
 void ThrowSDLError(void){
