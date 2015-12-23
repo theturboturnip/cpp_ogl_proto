@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <SDL2/SDL_opengl.h>
-#include <png.h>
+//#include <png.h>
 using namespace std;
 
 /*

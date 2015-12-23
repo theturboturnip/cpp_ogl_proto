@@ -4,7 +4,7 @@
 #include <SDL2/SDL_opengl.h>
 #include <iostream>
 #include "loader.cpp"
-#include "loadShader.cpp"
+//#include "loadShader.cpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <glm/gtc/matrix_transform.hpp> 
