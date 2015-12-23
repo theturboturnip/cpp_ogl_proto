@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h> 
 #include <SDL2/SDL_opengl.h>
 #include <iostream>
+#include "loader.cpp"
 #include "loadShader.cpp"
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,8 +32,6 @@ void checkSDLError(void)
 
 glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip){
   float FOVrads=glm::radians(FOV),aspect=(float)SCREEN_WIDTH/(float)SCREEN_HEIGHT;
-  fprintf(stderr,//"FOV: %f\nFOV Radians: %f\nAspect: %f\n",FOV,FOVrads,aspect); 
-	  "Z Near: %f\nZ Far:%f\n",zNearClip,zFarClip);
   return glm::perspective(FOVrads,aspect,zNearClip,zFarClip);
 }
 
@@ -88,8 +87,10 @@ int CreateWindow(void){
   return 0;
 }
 
-void InitScene(void){
+int InitScene(void){
   glClearColor(0.0f,0.0f,0.4f,0.0f);
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
   glGenVertexArrays(1,&VertexArrayID);
   glBindVertexArray(VertexArrayID);
   GLfloat g_vertex_buffer_data[] = {
@@ -99,10 +100,15 @@ void InitScene(void){
   glGenBuffers(1,&VertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-  ShaderProgramID=LoadShaders("MatrixVertexShader.glsl","SimpleFragmentShader.glsl");
+  ShaderProgramID=LoadShadersIntoProgram("MatrixVertexShader.glsl","SimpleFragmentShader.glsl");
+  if(ShaderProgramID==0){
+    fprintf(stderr,"Shader link failed\n");
+    return 1;
+  }
   //Getting MVP, giving to shader
   MatrixID=glGetUniformLocation(ShaderProgramID, "MVP");
   MVP =FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix()*FindModelMatrix();
+  return 0;
 }
 /*Basic object creation
  need vertex shader + fragment shader for entire object
@@ -140,13 +146,12 @@ void MainLoop(void){
 }
 
 int main(int argc,char *argv[]){
-  //fprintf(stderr, "Argument Count: %d\n",argc);
   if (argc==3){
     SCREEN_WIDTH=atoi(argv[1]);
     SCREEN_HEIGHT=atoi(argv[2]);
   }
   if (CreateWindow()==1) return 1;
-  InitScene();
+  if (InitScene()==1) return 1;
   while (!shouldEnd){
     MainLoop();
   }
