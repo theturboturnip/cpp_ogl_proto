@@ -15,6 +15,7 @@ SDL_Window* window=NULL;
 SDL_GLContext glContext;
 bool shouldEnd=false;
 SDL_Event e;
+glm::mat4 MVP;
 GLuint VertexArrayID,VertexBuffer,ShaderProgramID,MatrixID;
 
 void checkSDLError(void)
@@ -98,8 +99,7 @@ void InitScene(void){
   ShaderProgramID=LoadShaders("MatrixVertexShader.glsl","SimpleFragmentShader.glsl");
   //Getting MVP, giving to shader
   MatrixID=glGetUniformLocation(ShaderProgramID, "MVP");
-  glm::mat4 MVP=FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix()*FindModelMatrix();
-  glUniformMatrix4fv(MatrixID,1,GL_FALSE,&MVP[0][0]);
+  MVP =FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix()*FindModelMatrix();
 }
 /*Basic object creation
  need vertex shader + fragment shader for entire object
@@ -121,6 +121,8 @@ void MainLoop(void){
   }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
+  glUniformMatrix4fv(MatrixID,1,GL_FALSE,&MVP[0][0]);
+
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
   glVertexAttribPointer(0,
