@@ -1,3 +1,4 @@
+#include "loader.h"
 #include <iostream>
 #include <fstream>
 #include <SDL2/SDL_opengl.h>
@@ -45,7 +46,7 @@ GLuint LoadShaderFromFile(string pathString,GLenum shaderType){
   return ShaderID;
 }
 
-GLuint LoadShadersIntoProgram(string vertexPath,string fragPath,GLuint program=0){
+GLuint LoadShadersIntoProgram(string vertexPath,string fragPath,GLuint program){
   if(program==0)
     program=glCreateProgram();
   GLuint vertexShader=LoadShaderFromFile(vertexPath,GL_VERTEX_SHADER);

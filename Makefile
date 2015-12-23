@@ -14,7 +14,7 @@ LINKFLAGS = -iframework /Library/Frameworks -framework SDL2 -framework OpenGL
 CPPFLAGS  = -Wall -I$(GLM) -iframework /Library/Frameworks
 endif
 
-OBJS = main.o
+OBJS = main.o loader.o
 
 prog: $(OBJS)
 	$(LINK) $(LINKFLAGS) -o prog $(OBJS)

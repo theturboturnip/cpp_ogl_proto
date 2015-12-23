@@ -3,13 +3,12 @@
 #include <SDL2/SDL.h> 
 #include <SDL2/SDL_opengl.h>
 #include <iostream>
-#include "loader.cpp"
-//#include "loadShader.cpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtx/transform.hpp>
 #include <cstdlib>
+#include "loader.h"
 
 int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
 float FOV=45;
