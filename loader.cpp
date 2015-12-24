@@ -128,8 +128,10 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3]){
   //Assume model is a .obj
   fprintf(stderr, "Attempting model load from %s...",modelPath.c_str());
   FILE* modelFile=fopen(modelPath.c_str(),"r");
-  if(modelFile==NULL)
-    fprintf(stderr, " Failure\nCouldn't open file\n");
+  if(modelFile==NULL) {
+      fprintf(stderr, " Failure\nCouldn't open model file '%s'\n", modelPath.c_str());
+    return 0;
+  }
   vector<glm::vec3> verts,normals;
   vector<glm::vec2> uvs;
   vector< unsigned int > vertexIndices, uvIndices, normalIndices;

@@ -24,6 +24,8 @@ public:
     int InitScene(void);
     SDL_Window    *window;
     SDL_GLContext glContext;
+    GLuint tetra_buffers[3];
+    float lookat[3];
 };
 
 int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
@@ -36,6 +38,9 @@ GLuint VertexArrayID,VertexBuffer,ShaderProgramID,MatrixID;
 c_main::c_main(void)
 {
     window = NULL;
+    lookat[0] = 4.0;
+    lookat[1] = 3.0;
+    lookat[2] = 3.0;
 }
 
 void
@@ -54,8 +59,8 @@ glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip){
   return glm::perspective(FOVrads,aspect,zNearClip,zFarClip);
 }
 
-glm::mat4 FindViewMatrix(){
-  return glm::lookAt(glm::vec3(4,3,3),
+glm::mat4 FindViewMatrix(float lookat[3]){
+    return glm::lookAt(glm::vec3(lookat[0],lookat[1],lookat[2]),
 		     glm::vec3(0,0,0),
 		     glm::vec3(0,1,0));
 }
@@ -122,6 +127,7 @@ c_main::CreateWindow(int width, int height)
 int 
 c_main::InitScene(void)
 {
+
   glClearColor(0.0f,0.0f,0.4f,0.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
@@ -135,14 +141,17 @@ c_main::InitScene(void)
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
   
+  if (LoadModelFromFile("tetra.obj", tetra_buffers)!=1) {
+      return 0;
+  }
+
   ShaderProgramID=LoadShadersIntoProgram("MatrixVertexShader.glsl","SimpleFragmentShader.glsl");
   if(ShaderProgramID==0){
     fprintf(stderr,"Shader link failed\n");
     return 0;
   }
   //Getting MVP, giving to shader
-  MatrixID=glGetUniformLocation(ShaderProgramID, "MVP");
-  MVP =FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix()*FindModelMatrix();
+  MatrixID = glGetUniformLocation(ShaderProgramID, "MVP");
   return 1;
 }
 
@@ -160,20 +169,35 @@ c_main::MainLoop(void)
   while (SDL_PollEvent(&e)!=0){
     if (e.type==SDL_QUIT)
       shouldEnd=true;
+    if (e.type==SDL_KEYDOWN) {
+        if (e.key.keysym.sym==SDLK_a) {
+            lookat[0] -= 0.1;
+        }
+        if (e.key.keysym.sym==SDLK_d) {
+            lookat[0] += 0.1;
+        }
+        if (e.key.keysym.sym==SDLK_r) {
+            lookat[0] = 4.0;
+        }
+    }
   }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
+
+  MVP      = FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix(lookat)*FindModelMatrix();
+
   glUniformMatrix4fv(MatrixID,1,GL_FALSE,&MVP[0][0]);
 
   glEnableVertexAttribArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+//  glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[0]);
   glVertexAttribPointer(0,
 			3,
 			GL_FLOAT,
 			GL_FALSE,
 			0,
 			(void*)0);
-  glDrawArrays(GL_TRIANGLES,0,3);
+  glDrawArrays(GL_TRIANGLES,0,3*4);
   glDisableVertexAttribArray(0);
   SDL_GL_SwapWindow(window);
 }
