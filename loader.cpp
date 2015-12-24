@@ -1,9 +1,14 @@
 #define GL_GLEXT_PROTOTYPES
+#define GLM_FORCE_RADIANS
+
 #include "loader.h"
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include <SDL2/SDL_opengl.h>
-#include <SDL2_image/SDL_image.h>
+#include <SDL2/SDL_image.h>
+#include <glm/gtc/matrix_transform.hpp> 
+#include <glm/gtx/transform.hpp>
 using namespace std;
 
 //All importing functions give a GLuint for referencing the loaded object.
@@ -118,13 +123,13 @@ Model Loading
 
 */
 
-GLuint LoadModelFromFile(string modelPath){
+GLuint *LoadModelFromFile(string modelPath){
   //Assume model is a .obj
   fprintf(stderr, "Attempting model load from %s...",modelPath.c_str());
-  FILE *modelFile=fopen(modelPath,"r");
-  if(file==NULL){
+  FILE* modelFile=fopen(modelPath.c_str(),"r");
+  if(modelFile==NULL)
     fprintf(stderr, " Failure\nCouldn't open file\n");
-  vector<glm::vec3> verts,normals;
+  std::vector<glm::vec3> verts,normals;
   vector<glm::vec2> uvs;
   vector< unsigned int > vertexIndices, uvIndices, normalIndices;
   int line=0;
@@ -132,27 +137,27 @@ GLuint LoadModelFromFile(string modelPath){
     //Find first word of line
     char lineHeader[128];
     int res= fscanf(modelFile,"%s",lineHeader);
-    if(ref==EOF)
+    if(res==EOF)
       break;
     if(strcmp(lineHeader,"vt")==0){
       //Process UV
-      gml::vec2 uv;
-      fscanf(file,"%f %f\n",&uv.x,&uv.y);
+      glm::vec2 uv;
+      fscanf(modelFile,"%f %f\n",&uv.x,&uv.y);
       uvs.push_back(uv);
     }else if(strcmp(lineHeader,"vn")==0){
       //Process normal
       glm::vec3 normal;
-      fscanf(file,"%f %f %f\n", &normal.x,&normal.y,&normal.z);
+      fscanf(modelFile,"%f %f %f\n", &normal.x,&normal.y,&normal.z);
       normals.push_back(normal);
     }else if(strcmp(lineHeader,"v")==0){
       //Process vertex
       glm::vec3 vertex;
-      fscanf(file,"%f %f %f\n",&vertex.x,&vertex.y,&vertex.z);
+      fscanf(modelFile,"%f %f %f\n",&vertex.x,&vertex.y,&vertex.z);
       verts.push_back(vertex);
     }else if(strcmp(lineHeader,"f")==0){
       //Process face
       unsigned int vertexIndex[3],uvIndex[3],normalIndex[3];
-      int matches=fscanf(file,"%d/%d/%d %d/%d/%d %d/%d/%d\n",
+      int matches=fscanf(modelFile,"%d/%d/%d %d/%d/%d %d/%d/%d\n",
 			 &vertexIndex[0],&uvIndex[0],&normalIndex[0],
 			 &vertexIndex[1],&uvIndex[1],&normalIndex[1],
 			 &vertexIndex[2],&uvIndex[2],&normalIndex[2]);
@@ -160,42 +165,66 @@ GLuint LoadModelFromFile(string modelPath){
 	fprintf(stderr," Failure\nLine %d couldn't be read\n",line);
 	return 0;
       }
-      vertexIndicies.push_back(vertexIndex[0]);
-      vertexIndicies.push_back(vertexIndex[1]);
-      vertexIndicies.push_back(vertexIndex[2]);
+      vertexIndices.push_back(vertexIndex[0]);
+      vertexIndices.push_back(vertexIndex[1]);
+      vertexIndices.push_back(vertexIndex[2]);
       
-      uvIndicies.push_back(uvIndex[0]);
-      uvIndicies.push_back(uvIndex[1]);
-      uvIndicies.push_back(uvIndex[2]);
+      uvIndices.push_back(uvIndex[0]);
+      uvIndices.push_back(uvIndex[1]);
+      uvIndices.push_back(uvIndex[2]);
 
-      normalIndicies.push_back(normalIndex[0]);
-      normalIndicies.push_back(normalIndex[1]);
-      normalIndicies.push_back(normalIndex[2]);
+      normalIndices.push_back(normalIndex[0]);
+      normalIndices.push_back(normalIndex[1]);
+      normalIndices.push_back(normalIndex[2]);
     }
     line++;
     //Done processing, loop back
   }
   //Organize data into OpenGL compatible format
-  int vertexIndiciesLength=vertexIndicies.size();
-  glm::vec3 organizedVerticies[vertexIndiciesLength],
-    organizedNormals[vertexIndiciesLength];
-  glm::vec2 organizedUVs[vertexIndiciesLength];
+  unsigned int vertexIndicesLength=vertexIndices.size(),i;
+  glm::vec3 organizedVerticies[vertexIndicesLength],
+    organizedNormals[vertexIndicesLength];
+  glm::vec2 organizedUVs[vertexIndicesLength];
   //Organize verticies
-  for(unsigned int i=0; i<vertexIndiciesLength;i++){
-    glm::vec3 vertex=verts[vertexIndicies[i]-1];
+  for(i=0; i<vertexIndicesLength;i++){
+    glm::vec3 vertex=verts[vertexIndices[i]-1];
     //-1 because .obj starts from 1
     organizedVerticies[i]=vertex;
   }
   //Organize normals
-  for(i=0; i<vertexIndiciesLength;i++){
-    glm::vec3 normal=normals[normalIndicies[i]-1];
+  for(i=0; i<vertexIndicesLength;i++){
+    glm::vec3 normal=normals[normalIndices[i]-1];
     organizedNormals[i]=normal;
   }
   //Organize uvs
-  for(i=0; i<vertexIndiciesLength;i++){
-    glm::vec2 uv=uvs[uvIndicies[i]-1];
+  for(i=0; i<vertexIndicesLength;i++){
+    glm::vec2 uv=uvs[uvIndices[i]-1];
     organizedUVs[i]=uv;
   }
-  //Data is organized, create array buffers and finish
+  //Data is organized, create array of buffer and finish
+  GLuint buffers[3];
+  //Vertex=0
+  //UV=1
+  //Normal=2
+  glGenBuffers(3,buffers);
+  //Fill vertex buffer
+  glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);
+  glBufferData(GL_ARRAY_BUFFER,
+	       sizeof(glm::vec3)*vertexIndicesLength,
+	       &organizedVerticies[0],
+	       GL_STATIC_DRAW);
+  //Fill uv buffer
+  glBindBuffer(GL_ARRAY_BUFFER,buffers[1]);
+  glBufferData(GL_ARRAY_BUFFER,
+	       sizeof(glm::vec2)*vertexIndicesLength,
+	       &organizedUVs[0],
+	       GL_STATIC_DRAW);
+  //Fill normal buffer
+  glBindBuffer(GL_ARRAY_BUFFER,buffers[2]);
+  glBufferData(GL_ARRAY_BUFFER,
+	       sizeof(glm::vec3)*vertexIndicesLength,
+	       &organizedNormals[0],
+	       GL_STATIC_DRAW);
+  return buffers;
   
 }
