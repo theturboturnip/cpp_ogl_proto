@@ -99,6 +99,7 @@ int InitScene(void){
   glGenBuffers(1,&VertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+  
   ShaderProgramID=LoadShadersIntoProgram("MatrixVertexShader.glsl","SimpleFragmentShader.glsl");
   if(ShaderProgramID==0){
     fprintf(stderr,"Shader link failed\n");
