@@ -5,7 +5,7 @@ all: prog
 OS := $(shell uname)
 
 LINK      = g++
-LINKFLAGS = -lGL -lSDL2main -lSDL2
+LINKFLAGS = -lGL -lSDL2main -lSDL2 -lSDL2_image
 CPPFLAGS  = -Wall
 
 ifeq ($(OS),Darwin)

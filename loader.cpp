@@ -3,8 +3,12 @@
 #include <iostream>
 #include <fstream>
 #include <SDL2/SDL_opengl.h>
-//#include <png.h>
+#include <SDL2/SDL_image.h>
 using namespace std;
+
+//All importing functions give a GLuint for referencing the loaded object.
+//If the import fails, it will return 0.
+//When using texture loaded using LoadImageFromFile it will be vertically flipped. Combat this by flipping y texture coordinates when importing model.
 
 /*
 
@@ -14,6 +18,7 @@ Shader Loading
 
 GLuint LoadShaderFromFile(string pathString,GLenum shaderType){
   //Read all text
+  fprintf(stderr, "Attempting shader load from %s...",pathString.c_str());
   const char *path=pathString.c_str();
   string varyingShaderCode;
   ifstream file (path,ios::in);
@@ -23,7 +28,7 @@ GLuint LoadShaderFromFile(string pathString,GLenum shaderType){
       varyingShaderCode+=("\n"+line);
     file.close();
   }else{
-    fprintf(stderr, "File at %s couldn't be read, returning NULL",path);
+    fprintf(stderr, " Failure\nFile couldn't be read\n");
     return 0;
   }
   const char *shaderCode=varyingShaderCode.c_str();
@@ -40,9 +45,10 @@ GLuint LoadShaderFromFile(string pathString,GLenum shaderType){
     //Shader has warnings or has failed
     char ErrorMessage[compileInfoLength+1];
     glGetShaderInfoLog(ShaderID,compileInfoLength,NULL,ErrorMessage);
-    fprintf(stderr,"Shader %s failed %s\n",path,ErrorMessage);
+    fprintf(stderr," Failure\n%s\n",ErrorMessage);
     return 0;
   }
+  fprintf(stderr," Success\n");
   //Send Shader ID
   return ShaderID;
 }
@@ -84,3 +90,23 @@ Texture Loading
 
  */
 
+GLuint LoadTextureFromFile(string imagePath, GLuint imageType){
+  fprintf(stderr,"Attempting image load from %s...",imagePath.c_str());
+  SDL_Surface *surface=IMG_Load(imagePath.c_str());
+  if (surface==NULL){
+    //SDL couldn't load image
+    fprintf(stderr, " Failure\n%s\n", SDL_GetError());
+    return 0;
+  }
+  //Generate an OpenGL texture to return
+  GLuint TextureID;
+  glGenTextures(1,&TextureID);
+  glBindTexture(GL_TEXTURE_2D,TextureID);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,surface->w,surface->h,0,imageType,GL_UNSIGNED_BYTE,surface->pixels);
+  //Set filtering mode for when pixels smaller and bigger than screen
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+  SDL_FreeSurface(surface);
+  fprintf(stderr," Success\n");
+  return TextureID;
+}
