@@ -5,13 +5,13 @@
 class Transform{
  public:
   glm::vec3 position,rotation,scale;
-}
+};
 
 class Mesh{
  public:
-  Mesh(string modelPath,string texturePath,Transform t=NULL);
+  Mesh(string modelPath,string texturePath,Transform t);
   void Draw(glm::mat4 projection,glm::mat4 view);
  protected:
   Transform transform;
-  GLuint model,texture;
-}
+  GLuint model[3],texture;
+};

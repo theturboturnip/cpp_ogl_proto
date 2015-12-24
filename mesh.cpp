@@ -2,9 +2,10 @@
 #include <glm/gtx/transform.hpp>
 #include <SDL2/SDL_opengl.h>
 #include "loader.h"
+#include "mesh.h"
 
 Mesh::Mesh(string modelPath,string texturePath,Transform t){
-  model=LoadModelFromFile(modelPath);
-  texture=LoadTextureFromFile(texturePath);
+  LoadModelFromFile(modelPath, model); // Returns 0 on ERROR
+  texture=LoadTextureFromFile(texturePath, GL_RGB);
   transform=t;
 }
