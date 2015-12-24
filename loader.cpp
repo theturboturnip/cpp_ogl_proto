@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <SDL2/SDL_opengl.h>
-#include <SDL2/SDL_image.h>
+#include <SDL2_image/SDL_image.h>
 using namespace std;
 
 //All importing functions give a GLuint for referencing the loaded object.
