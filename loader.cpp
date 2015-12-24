@@ -1,14 +1,15 @@
 #define GL_GLEXT_PROTOTYPES
 #define GLM_FORCE_RADIANS
 
-#include "loader.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <SDL2/SDL_opengl.h>
-#include <SDL2/SDL_image.h>
+#include <SDL_opengl.h>
+#include <SDL_image.h>
+#include "loader.h"
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 using namespace std;
 
 //All importing functions give a GLuint for referencing the loaded object.
@@ -123,13 +124,13 @@ Model Loading
 
 */
 
-GLuint *LoadModelFromFile(string modelPath){
+int LoadModelFromFile(string modelPath, GLuint buffers[3]){
   //Assume model is a .obj
   fprintf(stderr, "Attempting model load from %s...",modelPath.c_str());
   FILE* modelFile=fopen(modelPath.c_str(),"r");
   if(modelFile==NULL)
     fprintf(stderr, " Failure\nCouldn't open file\n");
-  std::vector<glm::vec3> verts,normals;
+  vector<glm::vec3> verts,normals;
   vector<glm::vec2> uvs;
   vector< unsigned int > vertexIndices, uvIndices, normalIndices;
   int line=0;
@@ -182,28 +183,35 @@ GLuint *LoadModelFromFile(string modelPath){
     //Done processing, loop back
   }
   //Organize data into OpenGL compatible format
-  unsigned int vertexIndicesLength=vertexIndices.size(),i;
-  glm::vec3 organizedVerticies[vertexIndicesLength],
-    organizedNormals[vertexIndicesLength];
-  glm::vec2 organizedUVs[vertexIndicesLength];
+  int i;
+  unsigned int vertexIndicesLength=vertexIndices.size();
+  float organizedVerticies[vertexIndicesLength*3];
+  float organizedNormals[vertexIndicesLength*3];
+  float organizedUVs[vertexIndicesLength*3];
   //Organize verticies
   for(i=0; i<vertexIndicesLength;i++){
-    glm::vec3 vertex=verts[vertexIndices[i]-1];
+      float *vertex = glm::value_ptr(verts[vertexIndices[i]-1]);
     //-1 because .obj starts from 1
-    organizedVerticies[i]=vertex;
+      organizedVerticies[3*i+0]=vertex[0];
+      organizedVerticies[3*i+1]=vertex[1];
+      organizedVerticies[3*i+2]=vertex[2];
   }
   //Organize normals
   for(i=0; i<vertexIndicesLength;i++){
-    glm::vec3 normal=normals[normalIndices[i]-1];
-    organizedNormals[i]=normal;
+      float *normal = glm::value_ptr(normals[normalIndices[i]-1]);
+    //-1 because .obj starts from 1
+      organizedNormals[3*i+0]=normal[0];
+      organizedNormals[3*i+1]=normal[1];
+      organizedNormals[3*i+2]=normal[2];
   }
   //Organize uvs
   for(i=0; i<vertexIndicesLength;i++){
-    glm::vec2 uv=uvs[uvIndices[i]-1];
-    organizedUVs[i]=uv;
+      float *uv = glm::value_ptr(uvs[uvIndices[i]-1]);
+      organizedUVs[3*i+0]=uv[0];
+      organizedUVs[3*i+1]=uv[1];
+      organizedUVs[3*i+2]=uv[2];
   }
   //Data is organized, create array of buffer and finish
-  GLuint buffers[3];
   //Vertex=0
   //UV=1
   //Normal=2
@@ -226,6 +234,6 @@ GLuint *LoadModelFromFile(string modelPath){
 	       sizeof(glm::vec3)*vertexIndicesLength,
 	       &organizedNormals[0],
 	       GL_STATIC_DRAW);
-  return buffers;
+  return 1;
   
 }

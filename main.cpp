@@ -1,7 +1,7 @@
 #define GL_GLEXT_PROTOTYPES
 #define GLM_FORCE_RADIANS
-#include <SDL2/SDL.h> 
-#include <SDL2/SDL_opengl.h>
+#include <SDL.h> 
+#include <SDL_opengl.h>
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
