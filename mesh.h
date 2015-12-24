@@ -10,8 +10,8 @@ class Transform{
 class Mesh{
  public:
   Mesh(string modelPath,string texturePath,Transform t=NULL);
-  void Draw(glm::mat4 projection,glm::mat4 view);
+  void Draw(glm::mat4 VP,GLuint shaderMatrixLocation);
  protected:
   Transform transform;
-  GLuint model,texture;
+  GLuint model[3],texture;
 }

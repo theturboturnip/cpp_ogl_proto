@@ -143,6 +143,7 @@ GLuint *LoadModelFromFile(string modelPath){
       //Process UV
       glm::vec2 uv;
       fscanf(modelFile,"%f %f\n",&uv.x,&uv.y);
+      uv.y=1-uv.y;
       uvs.push_back(uv);
     }else if(strcmp(lineHeader,"vn")==0){
       //Process normal
