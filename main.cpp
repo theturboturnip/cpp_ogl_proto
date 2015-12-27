@@ -42,7 +42,7 @@ glm::mat4 FindViewMatrix(){
 		     glm::vec3(0,1,0));
 }
 glm::mat4 FindModelMatrix(){
-  return glm::mat4(12.0f);
+  return glm::mat4(1.0f);
 }
 
 void ThrowSDLError(void){
@@ -101,7 +101,7 @@ int InitScene(void){
   glGenBuffers(1,&VertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);*/
-  m=new Mesh("tetra.obj","rock.png");
+  m=new Mesh("cube.obj","rock.png");
   ShaderProgramID=LoadShadersIntoProgram("TextureVertexShader.glsl","TextureFragmentShader.glsl");
   if(ShaderProgramID==0){
     fprintf(stderr,"Shader link failed\n");
