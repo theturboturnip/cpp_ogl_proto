@@ -185,8 +185,8 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3]){
       //Process UV
       glm::vec2 uv;
       fscanf(modelFile,"%f %f\n",&uv.x,&uv.y);
-      uv.y=(2+uv.y)/4;
-      uv.x=(2+uv.x)/4;
+      //uv.y=(2+uv.y)/4;
+      //uv.x=(2+uv.x)/4;
       uvs.push_back(uv);
     }else if(strcmp(lineHeader,"vn")==0){
       //Process normal
@@ -248,9 +248,8 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3]){
   //Organize uvs
   for(i=0; i<vertexIndicesLength;i++){
       float *uv = glm::value_ptr(uvs[uvIndices[i]-1]);
-      organizedUVs[3*i+0]=uv[0];
-      organizedUVs[3*i+1]=uv[1];
-      organizedUVs[3*i+2]=uv[2];
+      organizedUVs[2*i+0]=uv[0];
+      organizedUVs[2*i+1]=uv[1];
   }
   //Data is organized, create array of buffer and finish
   //Vertex=0
