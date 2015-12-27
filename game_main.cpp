@@ -205,8 +205,15 @@ c_main::MainLoop(void)
         if (e.key.keysym.sym==SDLK_d) {
             lookat[0] += 0.1;
         }
+        if (e.key.keysym.sym==SDLK_w) {
+            lookat[1] -= 0.1;
+        }
+        if (e.key.keysym.sym==SDLK_s) {
+            lookat[1] += 0.1;
+        }
         if (e.key.keysym.sym==SDLK_r) {
             lookat[0] = 4.0;
+            lookat[1] = 3.0;
         }
     }
   }
