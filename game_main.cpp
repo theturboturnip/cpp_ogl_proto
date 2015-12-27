@@ -34,8 +34,10 @@ public:
     GLuint M_MatrixID;
     GLuint V_MatrixID;
     GLuint MVP_MatrixID;
+    GLuint TextureID;
     GLuint VertexArrayID;
     GLuint LightPosID;
+    GLuint texture;
 };
 
 int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
@@ -165,6 +167,8 @@ c_main::InitScene(void)
       return 0;
   }
 
+  texture = LoadTextureFromFile("rock.png", GL_RGB);
+
   ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","game_fragment_shader.glsl");
   if (ShaderProgramID == 0) {
     fprintf(stderr,"Shader load failed\n");
@@ -175,6 +179,8 @@ c_main::InitScene(void)
   M_MatrixID   = glGetUniformLocation(ShaderProgramID, "M");
   V_MatrixID   = glGetUniformLocation(ShaderProgramID, "V");
   MVP_MatrixID = glGetUniformLocation(ShaderProgramID, "MVP");
+
+  TextureID = glGetUniformLocation(ShaderProgramID,"textureSampler");
   return 1;
 }
 
@@ -215,6 +221,9 @@ glUniformMatrix4fv(M_MatrixID,  1,GL_FALSE,&M[0][0]);
 glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&V[0][0]);
   glUniformMatrix4fv(MVP_MatrixID,1,GL_FALSE,&MVP[0][0]);
   glUniform3f(LightPosID,3.0,2.0,2.0);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glUniform1i(TextureID,0);
 
   glEnableVertexAttribArray(0);
 //  glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
