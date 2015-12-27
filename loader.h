@@ -9,4 +9,4 @@ using namespace std;
 GLuint LoadShaderFromFile(string pathString,GLenum shaderType);
 GLuint LoadShadersIntoProgram(string vertexPath,string fragPath,GLuint program=0);
 GLuint LoadTextureFromFile(string imagePath, GLuint imageType);
-int LoadModelFromFile(string modelPath, GLuint buffers[3]);
+int LoadModelFromFile(string modelPath, GLuint buffers[3],unsigned int *vertexNum=NULL);

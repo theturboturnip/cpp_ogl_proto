@@ -184,7 +184,7 @@ c_main::MainLoop(void)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
 
-  MVP      = FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix(lookat)*FindModelMatrix();
+  MVP = FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix(lookat)*FindModelMatrix();
 
   glUniformMatrix4fv(MatrixID,1,GL_FALSE,&MVP[0][0]);
 

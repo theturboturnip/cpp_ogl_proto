@@ -124,7 +124,7 @@ Model Loading
 
 */
 
-int LoadModelFromFile(string modelPath, GLuint buffers[3]){
+int LoadModelFromFile(string modelPath, GLuint buffers[3],unsigned int *vertexNum=NULL){
   //Assume model is a .obj
   fprintf(stderr, "Attempting model load from %s...",modelPath.c_str());
   FILE* modelFile=fopen(modelPath.c_str(),"r");
@@ -187,6 +187,8 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3]){
   //Organize data into OpenGL compatible format
   int i;
   unsigned int vertexIndicesLength=vertexIndices.size();
+  if (vertexNum!=NULL)
+    vertexNum=&vertexIndicesLength;
   float organizedVerticies[vertexIndicesLength*3];
   float organizedNormals[vertexIndicesLength*3];
   float organizedUVs[vertexIndicesLength*3];
@@ -237,5 +239,4 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3]){
 	       &organizedNormals[0],
 	       GL_STATIC_DRAW);
   return 1;
-  
 }
