@@ -8,7 +8,8 @@
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtx/transform.hpp>
 #include <cstdlib>
-#include "loader.h"
+//#include "loader.h"
+#include "mesh.h"
 
 int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
 float FOV=45;
@@ -16,8 +17,9 @@ SDL_Window* window=NULL;
 SDL_GLContext glContext;
 bool shouldEnd=false;
 SDL_Event e;
-glm::mat4 MVP;
-GLuint VertexArrayID,VertexBuffer,ShaderProgramID,MatrixID;
+glm::mat4 VP;
+GLuint ShaderProgramID,MatrixID,TextureID;
+Mesh *m;
 
 void checkSDLError(void)
 {
@@ -35,7 +37,7 @@ glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip){
 }
 
 glm::mat4 FindViewMatrix(){
-  return glm::lookAt(glm::vec3(4,3,3),
+  return glm::lookAt(glm::vec3(4,4,3),
 		     glm::vec3(0,0,0),
 		     glm::vec3(0,1,0));
 }
@@ -90,7 +92,7 @@ int InitScene(void){
   glClearColor(0.0f,0.0f,0.4f,0.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
-  glGenVertexArrays(1,&VertexArrayID);
+  /*glGenVertexArrays(1,&VertexArrayID);
   glBindVertexArray(VertexArrayID);
   GLfloat g_vertex_buffer_data[] = {
     -1.0f,-1.0f,0.0f,
@@ -98,16 +100,17 @@ int InitScene(void){
     0.0f,1.0f,0.0f};
   glGenBuffers(1,&VertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-  
-  ShaderProgramID=LoadShadersIntoProgram("MatrixVertexShader.glsl","SimpleFragmentShader.glsl");
+  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);*/
+  m=new Mesh("tetra.obj","rock.png");
+  ShaderProgramID=LoadShadersIntoProgram("TextureVertexShader.glsl","TextureFragmentShader.glsl");
   if(ShaderProgramID==0){
     fprintf(stderr,"Shader link failed\n");
     return 1;
   }
   //Getting MVP, giving to shader
   MatrixID=glGetUniformLocation(ShaderProgramID, "MVP");
-  MVP =FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix()*FindModelMatrix();
+  VP =FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix();
+  TextureID=glGetUniformLocation(ShaderProgramID,"textureSampler");
   return 0;
 }
 /*Basic object creation
@@ -130,18 +133,7 @@ void MainLoop(void){
   }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
-  glUniformMatrix4fv(MatrixID,1,GL_FALSE,&MVP[0][0]);
-
-  glEnableVertexAttribArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-  glVertexAttribPointer(0,
-			3,
-			GL_FLOAT,
-			GL_FALSE,
-			0,
-			(void*)0);
-  glDrawArrays(GL_TRIANGLES,0,3);
-  glDisableVertexAttribArray(0);
+  m->Draw(VP,MatrixID,TextureID);
   SDL_GL_SwapWindow(window);
 }
 

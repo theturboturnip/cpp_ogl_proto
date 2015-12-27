@@ -109,6 +109,7 @@ GLuint LoadTextureFromFile(string imagePath, GLuint imageType){
   GLuint TextureID;
   glGenTextures(1,&TextureID);
   glBindTexture(GL_TEXTURE_2D,TextureID);
+  fprintf(stderr,"%s",SDL_GetError());
   glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,surface->w,surface->h,0,imageType,GL_UNSIGNED_BYTE,surface->pixels);
   //Set filtering mode for when pixels smaller and bigger than screen
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
@@ -124,7 +125,7 @@ Model Loading
 
 */
 
-int LoadModelFromFile(string modelPath, GLuint buffers[3],unsigned int *vertexNum=NULL){
+int LoadModelFromFile(string modelPath, GLuint buffers[3]){
   //Assume model is a .obj
   fprintf(stderr, "Attempting model load from %s...",modelPath.c_str());
   FILE* modelFile=fopen(modelPath.c_str(),"r");
@@ -185,10 +186,7 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3],unsigned int *vertexNu
     //Done processing, loop back
   }
   //Organize data into OpenGL compatible format
-  int i;
-  unsigned int vertexIndicesLength=vertexIndices.size();
-  if (vertexNum!=NULL)
-    vertexNum=&vertexIndicesLength;
+  unsigned int vertexIndicesLength=vertexIndices.size(),i;
   float organizedVerticies[vertexIndicesLength*3];
   float organizedNormals[vertexIndicesLength*3];
   float organizedUVs[vertexIndicesLength*3];
@@ -238,5 +236,6 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3],unsigned int *vertexNu
 	       sizeof(glm::vec3)*vertexIndicesLength,
 	       &organizedNormals[0],
 	       GL_STATIC_DRAW);
-  return 1;
+  fprintf(stderr, " Success\n");
+  return vertexIndicesLength;
 }

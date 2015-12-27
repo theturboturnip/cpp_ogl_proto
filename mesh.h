@@ -1,3 +1,6 @@
+#ifndef __INC_MESH_H__
+#define __INC_MESH_H__
+
 #define GLM_FORCE_RADIANS
 #define GL_GLEXT_PROTOTYPES
 #include <glm/gtc/matrix_transform.hpp> 
@@ -12,10 +15,12 @@ class Transform{
 
 class Mesh{
  public:
-  Mesh(string modelPath,string texturePath,Transform t);
+  Mesh(string modelPath,string texturePath);
   void Draw(glm::mat4 VP,GLuint shaderMatrixLocation,GLuint shaderTextureLocation);
  protected:
-  Transform transform;
+  Transform *transform;
   GLuint model[3],texture;
   unsigned int vertexNum;
 };
+
+#endif // __INC_MESH_H__
