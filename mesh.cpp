@@ -19,8 +19,12 @@ void Mesh::Draw(glm::mat4 VP,GLuint shaderMatrixLocation,GLuint shaderTextureLoc
   if (transform!=NULL){
     glm::mat4 M=glm::translate(transform->position)*glm::scale(transform->scale);
     MVP=VP*M;
-  }else
-    MVP=VP*glm::mat4(12.0f);
+  }else {
+      glm::mat4 a;
+      a = glm::mat4(10.0f);
+      a[3][3] = 1.0;//.00.1;
+      MVP=VP*a; //glm::mat4(12.0f);
+  }
   //Apply MVP Matrix
   glUniformMatrix4fv(shaderMatrixLocation,1,GL_FALSE,&MVP[0][0]);
   //Apply Texture 
