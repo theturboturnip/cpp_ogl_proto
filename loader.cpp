@@ -99,22 +99,60 @@ Texture Loading
 
 GLuint LoadTextureFromFile(string imagePath, GLuint imageType){
   fprintf(stderr,"Attempting image load from %s...",imagePath.c_str());
-  SDL_Surface *surface=IMG_Load(imagePath.c_str());
-  if (surface==NULL){
+  SDL_Surface *surface;
+  SDL_Surface *image_surface=IMG_Load(imagePath.c_str());
+  SDL_PixelFormat sdl_pixel_format;
+  if (image_surface==NULL){
     //SDL couldn't load image
     fprintf(stderr, " Failure\n%s\n", SDL_GetError());
     return 0;
   }
+  sdl_pixel_format.palette = NULL;
+  sdl_pixel_format.format = SDL_PIXELFORMAT_RGB888;
+  sdl_pixel_format.BitsPerPixel = 24;
+  sdl_pixel_format.BytesPerPixel = 8;
+  sdl_pixel_format.Rmask=0x0000ff;
+  sdl_pixel_format.Gmask=0x00ff00;
+  sdl_pixel_format.Bmask=0xff0000;
+  surface = SDL_ConvertSurface(image_surface, &sdl_pixel_format, 0 );
+  if (surface==NULL){
+    //SDL couldn't convert image
+    fprintf(stderr, " Failure to convert image:\n%s\n", SDL_GetError());
+    return 0;
+  }
+
   //Generate an OpenGL texture to return
   GLuint TextureID;
+  if (0) {
+      unsigned char *p = (unsigned char *)surface->pixels;
+      int i, j;
+      printf( "width * height = %d . %d \n",surface->w, surface->h);
+      for (i=0; i<surface->w*surface->h*3; i+=16) {
+          printf("%03x:",i);
+          for (j=0; j<16; j++) {
+              printf(" %02x",*p++);
+          }
+          printf("\n");
+      }
+  }
   glGenTextures(1,&TextureID);
   glBindTexture(GL_TEXTURE_2D,TextureID);
   fprintf(stderr,"%s",SDL_GetError());
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,surface->w,surface->h,0,imageType,GL_UNSIGNED_BYTE,surface->pixels);
+  //glPixelStorei(GL_UNPACK_ALIGNMENT,4);	
+  //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,16/*surface->w*/,16/*surface->h*/,0,GL_RGB,GL_UNSIGNED_BYTE,surface->pixels);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,surface->w,surface->h,0,GL_RGB,GL_UNSIGNED_BYTE,surface->pixels);
   //Set filtering mode for when pixels smaller and bigger than screen
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-  SDL_FreeSurface(surface);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+  glGenerateMipmap(GL_TEXTURE_2D);
+
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  //SDL_FreeSurface(surface);
   fprintf(stderr," Success\n");
   return TextureID;
 }
@@ -147,7 +185,8 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3]){
       //Process UV
       glm::vec2 uv;
       fscanf(modelFile,"%f %f\n",&uv.x,&uv.y);
-      uv.y=1-uv.y;
+      uv.y=(2+uv.y)/4;
+      uv.x=(2+uv.x)/4;
       uvs.push_back(uv);
     }else if(strcmp(lineHeader,"vn")==0){
       //Process normal
