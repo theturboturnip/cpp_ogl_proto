@@ -167,7 +167,7 @@ c_main::InitScene(void)
       return 0;
   }
 
-  texture = LoadTextureFromFile("rock.png", GL_RGB);
+  texture = LoadTextureFromFile("rock.png", GL_RGBA);
 
   ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","game_fragment_shader.glsl");
   if (ShaderProgramID == 0) {

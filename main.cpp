@@ -92,9 +92,10 @@ int InitScene(void){
   glClearColor(0.0f,0.0f,0.4f,0.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
-  /*glGenVertexArrays(1,&VertexArrayID);
+  GLuint VertexArrayID;
+  glGenVertexArrays(1,&VertexArrayID);
   glBindVertexArray(VertexArrayID);
-  GLfloat g_vertex_buffer_data[] = {
+  /*GLfloat g_vertex_buffer_data[] = {
     -1.0f,-1.0f,0.0f,
     1.0f,-1.0f,0.0f,
     0.0f,1.0f,0.0f};
