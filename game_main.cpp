@@ -26,14 +26,22 @@ public:
     SDL_GLContext glContext;
     GLuint tetra_buffers[3];
     float lookat[3];
+    int num_triangles;
+    glm::mat4 M;
+    glm::mat4 V;
+    glm::mat4 MVP;
+    GLuint ShaderProgramID;
+    GLuint M_MatrixID;
+    GLuint V_MatrixID;
+    GLuint MVP_MatrixID;
+    GLuint VertexArrayID;
+    GLuint LightPosID;
 };
 
 int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
 float FOV=45;
 bool shouldEnd=false;
 SDL_Event e;
-glm::mat4 MVP;
-GLuint VertexArrayID,VertexBuffer,ShaderProgramID,MatrixID;
 
 c_main::c_main(void)
 {
@@ -54,6 +62,19 @@ c_main::checkSDLError(void)
 	}
 }
 
+void
+display_matrix( int m, int n, float *v )
+{
+    int i, j;
+    for (i=0; i<m; i++) {
+        for (j=0; j<m; j++) {
+            printf("    %08f",*v);
+            v++;
+        }
+        printf("\n");
+    }
+}
+
 glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip){
   float FOVrads=glm::radians(FOV),aspect=(float)SCREEN_WIDTH/(float)SCREEN_HEIGHT;
   return glm::perspective(FOVrads,aspect,zNearClip,zFarClip);
@@ -65,7 +86,11 @@ glm::mat4 FindViewMatrix(float lookat[3]){
 		     glm::vec3(0,1,0));
 }
 glm::mat4 FindModelMatrix(){
-  return glm::mat4(12.0f);
+    glm::mat4 a;
+a = glm::mat4(10.0f);
+a[3][3] = 1.0;//.00.1;
+//display_matrix(4,4,&a[0][0]);
+return a;//glm::mat4(12.0f);
 }
 
 int c_main::Init(void)
@@ -133,25 +158,23 @@ c_main::InitScene(void)
   glDepthFunc(GL_LESS);
   glGenVertexArrays(1,&VertexArrayID);
   glBindVertexArray(VertexArrayID);
-  GLfloat g_vertex_buffer_data[] = {
-    -1.0f,-1.0f,0.0f,
-    1.0f,-1.0f,0.0f,
-    0.0f,1.0f,0.0f};
-  glGenBuffers(1,&VertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-  
-  if (LoadModelFromFile("tetra.obj", tetra_buffers)!=1) {
+
+  num_triangles = LoadModelFromFile("cube.obj", tetra_buffers);
+  if (num_triangles==0) {
+      fprintf(stderr, "Failed to load tetra\n");
       return 0;
   }
 
-  ShaderProgramID=LoadShadersIntoProgram("MatrixVertexShader.glsl","SimpleFragmentShader.glsl");
-  if(ShaderProgramID==0){
-    fprintf(stderr,"Shader link failed\n");
+  ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","game_fragment_shader.glsl");
+  if (ShaderProgramID == 0) {
+    fprintf(stderr,"Shader load failed\n");
     return 0;
   }
   //Getting MVP, giving to shader
-  MatrixID = glGetUniformLocation(ShaderProgramID, "MVP");
+  LightPosID   = glGetUniformLocation(ShaderProgramID, "LightPosition_worldspace");
+  M_MatrixID   = glGetUniformLocation(ShaderProgramID, "M");
+  V_MatrixID   = glGetUniformLocation(ShaderProgramID, "V");
+  MVP_MatrixID = glGetUniformLocation(ShaderProgramID, "MVP");
   return 1;
 }
 
@@ -184,9 +207,14 @@ c_main::MainLoop(void)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
 
-  MVP = FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix(lookat)*FindModelMatrix();
-
-  glUniformMatrix4fv(MatrixID,1,GL_FALSE,&MVP[0][0]);
+  M = FindModelMatrix();
+  V = FindViewMatrix(lookat);
+  MVP = FindProjectionMatrix(0.1f,100.0f)*V*M;
+//MVP = FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix(lookat)*FindModelMatrix();
+glUniformMatrix4fv(M_MatrixID,  1,GL_FALSE,&M[0][0]);
+glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&V[0][0]);
+  glUniformMatrix4fv(MVP_MatrixID,1,GL_FALSE,&MVP[0][0]);
+  glUniform3f(LightPosID,3.0,2.0,2.0);
 
   glEnableVertexAttribArray(0);
 //  glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
@@ -197,8 +225,29 @@ c_main::MainLoop(void)
 			GL_FALSE,
 			0,
 			(void*)0);
-  glDrawArrays(GL_TRIANGLES,0,3*4);
+
+  glEnableVertexAttribArray(1);
+  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[1]);
+  glVertexAttribPointer(1,
+			2,
+			GL_FLOAT,
+			GL_FALSE,
+			0,
+			(void*)0);
+
+  glEnableVertexAttribArray(2);
+  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[2]);
+  glVertexAttribPointer(2,
+			3,
+			GL_FLOAT,
+			GL_FALSE,
+			0,
+			(void*)0);
+
+  glDrawArrays(GL_TRIANGLES,0,3*num_triangles);
   glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
   SDL_GL_SwapWindow(window);
 }
 
@@ -223,12 +272,18 @@ int main(int argc,char *argv[]){
 
     m = new c_main();
     m->Init();
-    if (!m->CreateWindow(screen_width, screen_height))
+    if (!m->CreateWindow(screen_width, screen_height)) {
+        fprintf(stderr,"Create window failes\n");
         return 4;
-    if (!m->InitScene())
+    }
+    if (!m->InitScene()) {
+        fprintf(stderr,"Init scene failed\n");
         return 4;
+    }
 
+    fprintf(stderr,"Looping forever\n");
     m->LoopForever();
+    fprintf(stderr,"Done looping forever...\n");
     m->Exit();
     return 0;
 }
