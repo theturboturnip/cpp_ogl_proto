@@ -38,12 +38,14 @@ public:
     GLuint VertexArrayID;
     GLuint LightPosID;
     GLuint texture;
+    int keys_down[8];
 };
 
 int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
 float FOV=45;
 bool shouldEnd=false;
 SDL_Event e;
+static int keys[] = { SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_z, SDLK_x, SDLK_r, SDLK_q };
 
 c_main::c_main(void)
 {
@@ -195,28 +197,28 @@ c_main::InitScene(void)
 void
 c_main::MainLoop(void)
 {
+    int i;
   while (SDL_PollEvent(&e)!=0){
     if (e.type==SDL_QUIT)
       shouldEnd=true;
     if (e.type==SDL_KEYDOWN) {
-        if (e.key.keysym.sym==SDLK_a) {
-            lookat[0] -= 0.1;
+        for (i=0; i<sizeof(keys)/sizeof(e.key.keysym.sym); i++) {
+            if (e.key.keysym.sym==keys[i]) keys_down[i]=1;
         }
-        if (e.key.keysym.sym==SDLK_d) {
-            lookat[0] += 0.1;
-        }
-        if (e.key.keysym.sym==SDLK_w) {
-            lookat[1] -= 0.1;
-        }
-        if (e.key.keysym.sym==SDLK_s) {
-            lookat[1] += 0.1;
-        }
-        if (e.key.keysym.sym==SDLK_r) {
-            lookat[0] = 4.0;
-            lookat[1] = 3.0;
+    }
+    if (e.type==SDL_KEYUP) {
+        for (i=0; i<sizeof(keys)/sizeof(e.key.keysym.sym); i++) {
+            if (e.key.keysym.sym==keys[i]) keys_down[i]=0;
         }
     }
   }
+  if (keys_down[0]) { lookat[0]-=0.1; }
+  if (keys_down[1]) { lookat[0]+=0.1; }
+  if (keys_down[2]) { lookat[1]-=0.1; }
+  if (keys_down[3]) { lookat[1]+=0.1; }
+  if (keys_down[4]) { lookat[2]-=0.1; }
+  if (keys_down[5]) { lookat[2]+=0.1; }
+  if (keys_down[6]) { lookat[0]=4.0; lookat[1]=3.0; lookat[2]=3.0; }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
 
