@@ -103,7 +103,7 @@ int InitScene(void){
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);*/
   m=new Mesh("cube.obj","rock.png");
-  ShaderProgramID=LoadShadersIntoProgram("TextureVertexShader.glsl","TextureFragmentShader.glsl");
+  ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","custom_fragment_shader.glsl");
   if(ShaderProgramID==0){
     fprintf(stderr,"Shader link failed\n");
     return 1;

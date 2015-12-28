@@ -185,7 +185,7 @@ c_main::InitScene(void)
 
   texture = LoadTextureFromFile("rock2.png", GL_RGB);
 
-  ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","game_fragment_shader.glsl");
+  ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","custom_fragment_shader.glsl");
   if (ShaderProgramID == 0) {
     fprintf(stderr,"Shader load failed\n");
     return 0;
