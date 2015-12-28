@@ -10,10 +10,19 @@
 #include <cstdlib>
 #include "loader.h"
 
+#define NUM_KEYS 10
+static int keys[NUM_KEYS] = {
+SDLK_a, SDLK_d,
+SDLK_w, SDLK_s,
+SDLK_z, SDLK_x,
+SDLK_r, SDLK_q,
+SDLK_o, SDLK_p,
+};
+
 class c_main
 {
 public:
-    c_main(void);
+    c_main(int screen_width, int screen_height);
     ~c_main();
     void checkSDLError(void);
     int Init(void);
@@ -22,6 +31,10 @@ public:
     void Exit(void);
     int CreateWindow(int width, int height);
     int InitScene(void);
+    glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip);
+    glm::mat4 FindViewMatrix(float lookat[3]);
+    glm::mat4 FindModelMatrix();
+
     SDL_Window    *window;
     SDL_GLContext glContext;
     GLuint tetra_buffers[3];
@@ -38,21 +51,22 @@ public:
     GLuint VertexArrayID;
     GLuint LightPosID;
     GLuint texture;
-    int keys_down[8];
+    int keys_down[NUM_KEYS];
+    bool shouldEnd;
+    int screen_width, screen_height;
+    float FOV;
 };
 
-int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
-float FOV=45;
-bool shouldEnd=false;
-SDL_Event e;
-static int keys[] = { SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_z, SDLK_x, SDLK_r, SDLK_q };
-
-c_main::c_main(void)
+c_main::c_main(int screen_width, int screen_height)
 {
+    this->screen_width = screen_width;
+    this->screen_height = screen_height;
     window = NULL;
     lookat[0] = 4.0;
     lookat[1] = 3.0;
     lookat[2] = 3.0;
+    shouldEnd = false;
+    FOV = 45;
 }
 
 void
@@ -79,17 +93,17 @@ display_matrix( int m, int n, float *v )
     }
 }
 
-glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip){
-  float FOVrads=glm::radians(FOV),aspect=(float)SCREEN_WIDTH/(float)SCREEN_HEIGHT;
+glm::mat4 c_main::FindProjectionMatrix(float zNearClip,float zFarClip){
+    float FOVrads=glm::radians(FOV),aspect=(float)screen_width/screen_height;
   return glm::perspective(FOVrads,aspect,zNearClip,zFarClip);
 }
 
-glm::mat4 FindViewMatrix(float lookat[3]){
+glm::mat4 c_main::FindViewMatrix(float lookat[3]){
     return glm::lookAt(glm::vec3(lookat[0],lookat[1],lookat[2]),
 		     glm::vec3(0,0,0),
 		     glm::vec3(0,1,0));
 }
-glm::mat4 FindModelMatrix(){
+glm::mat4 c_main::FindModelMatrix(){
     glm::mat4 a;
 a = glm::mat4(10.0f);
 a[3][3] = 1.0;//.00.1;
@@ -198,6 +212,7 @@ void
 c_main::MainLoop(void)
 {
     int i;
+SDL_Event e;
   while (SDL_PollEvent(&e)!=0){
     if (e.type==SDL_QUIT)
       shouldEnd=true;
@@ -219,6 +234,9 @@ c_main::MainLoop(void)
   if (keys_down[4]) { lookat[2]-=0.1; }
   if (keys_down[5]) { lookat[2]+=0.1; }
   if (keys_down[6]) { lookat[0]=4.0; lookat[1]=3.0; lookat[2]=3.0; }
+  if (keys_down[7]) { shouldEnd = true; }
+  if (keys_down[8]) { FOV -= 1; }
+  if (keys_down[9]) { FOV += 1; }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
 
@@ -229,7 +247,7 @@ c_main::MainLoop(void)
 glUniformMatrix4fv(M_MatrixID,  1,GL_FALSE,&M[0][0]);
 glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&V[0][0]);
   glUniformMatrix4fv(MVP_MatrixID,1,GL_FALSE,&MVP[0][0]);
-  glUniform3f(LightPosID,3.0,2.0,2.0);
+  glUniform3f(LightPosID,4.0,3.0,3.0);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture);
   glUniform1i(TextureID,0);
@@ -288,7 +306,7 @@ int main(int argc,char *argv[]){
         screen_height = atoi(argv[2]);
     }
 
-    m = new c_main();
+    m = new c_main(screen_width, screen_height);
     m->Init();
     if (!m->CreateWindow(screen_width, screen_height)) {
         fprintf(stderr,"Create window failes\n");
