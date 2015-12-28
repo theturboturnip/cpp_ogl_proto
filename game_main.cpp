@@ -33,7 +33,10 @@ public:
     int InitScene(void);
     glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip);
     glm::mat4 FindViewMatrix(float lookat[3]);
-    glm::mat4 FindModelMatrix();
+    glm::mat4 FindModelMatrix(float x, float y, float z);
+    void draw_start(void);
+    void draw_cube(float x, float y, float z);
+    void draw_complete(void);
 
     SDL_Window    *window;
     SDL_GLContext glContext;
@@ -42,10 +45,12 @@ public:
     int num_triangles;
     glm::mat4 M;
     glm::mat4 V;
+    glm::mat4 P;
     glm::mat4 MVP;
     GLuint ShaderProgramID;
     GLuint M_MatrixID;
     GLuint V_MatrixID;
+    GLuint P_MatrixID;
     GLuint MVP_MatrixID;
     GLuint TextureID;
     GLuint VertexArrayID;
@@ -59,6 +64,7 @@ public:
 
 c_main::c_main(int screen_width, int screen_height)
 {
+    int i;
     this->screen_width = screen_width;
     this->screen_height = screen_height;
     window = NULL;
@@ -67,6 +73,9 @@ c_main::c_main(int screen_width, int screen_height)
     lookat[2] = 3.0;
     shouldEnd = false;
     FOV = 45;
+    for (i=0; i<NUM_KEYS; i++) {
+        keys_down[i] = 0;
+    }
 }
 
 void
@@ -100,12 +109,15 @@ glm::mat4 c_main::FindProjectionMatrix(float zNearClip,float zFarClip){
 
 glm::mat4 c_main::FindViewMatrix(float lookat[3]){
     return glm::lookAt(glm::vec3(lookat[0],lookat[1],lookat[2]),
-		     glm::vec3(0,0,0),
-		     glm::vec3(0,1,0));
+                       glm::vec3(0,0,0),
+                       glm::vec3(0,1,0));
 }
-glm::mat4 c_main::FindModelMatrix(){
+glm::mat4 c_main::FindModelMatrix(float x, float y,float z){
     glm::mat4 a;
-a = glm::mat4(10.0f);
+a = glm::mat4(5.0f);
+a[3][0] = x;
+a[3][1] = y;
+a[3][2] = z;
 a[3][3] = 1.0;//.00.1;
 //display_matrix(4,4,&a[0][0]);
 return a;//glm::mat4(12.0f);
@@ -183,7 +195,7 @@ c_main::InitScene(void)
       return 0;
   }
 
-  texture = LoadTextureFromFile("rock2.png", GL_RGB);
+  texture = LoadTextureFromFile("rock.png", GL_RGB);
 
   ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","game_fragment_shader.glsl");
   if (ShaderProgramID == 0) {
@@ -194,6 +206,7 @@ c_main::InitScene(void)
   LightPosID   = glGetUniformLocation(ShaderProgramID, "LightPosition_worldspace");
   M_MatrixID   = glGetUniformLocation(ShaderProgramID, "M");
   V_MatrixID   = glGetUniformLocation(ShaderProgramID, "V");
+  P_MatrixID   = glGetUniformLocation(ShaderProgramID, "P");
   MVP_MatrixID = glGetUniformLocation(ShaderProgramID, "MVP");
 
   TextureID = glGetUniformLocation(ShaderProgramID,"textureSampler");
@@ -207,6 +220,52 @@ c_main::InitScene(void)
  To draw, use a Draw() function
 */
 
+void
+c_main::draw_start(void)
+{
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    //glCullFace(GL_FRONT);
+    glActiveTexture(GL_TEXTURE0); // Uset texture unit 0 throughout
+    V = FindViewMatrix(lookat);
+    P = FindProjectionMatrix(0.1f,100.0f);
+    glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&V[0][0]);
+    glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&P[0][0]);
+    glUniform1i(TextureID,0);
+    glUniform3f(LightPosID,4.0,3.0,3.0);
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+}
+
+void
+c_main::draw_complete(void)
+{
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+}
+
+void
+c_main::draw_cube(float x, float y, float z)
+{
+
+    M = FindModelMatrix(x,y,z);
+  MVP = P*V*M;
+  glUniformMatrix4fv(M_MatrixID,  1,GL_FALSE,&M[0][0]);
+  glUniformMatrix4fv(MVP_MatrixID,1,GL_FALSE,&MVP[0][0]);
+
+  glBindTexture(GL_TEXTURE_2D, texture);
+
+  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[0]);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,NULL);
+  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[1]);
+  glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,NULL);
+  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[2]);
+  glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,0,NULL);
+  glDrawArrays(GL_TRIANGLES,0,3*num_triangles);
+}
 
 void
 c_main::MainLoop(void)
@@ -240,50 +299,12 @@ SDL_Event e;
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
 
-  M = FindModelMatrix();
-  V = FindViewMatrix(lookat);
-  MVP = FindProjectionMatrix(0.1f,100.0f)*V*M;
-//MVP = FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix(lookat)*FindModelMatrix();
-glUniformMatrix4fv(M_MatrixID,  1,GL_FALSE,&M[0][0]);
-glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&V[0][0]);
-  glUniformMatrix4fv(MVP_MatrixID,1,GL_FALSE,&MVP[0][0]);
-  glUniform3f(LightPosID,4.0,3.0,3.0);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture);
-  glUniform1i(TextureID,0);
+  draw_start();
+  for (i=0; i<10; i++) {
+      draw_cube(i,i,i);
+  }
+  draw_complete();
 
-  glEnableVertexAttribArray(0);
-//  glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[0]);
-  glVertexAttribPointer(0,
-			3,
-			GL_FLOAT,
-			GL_FALSE,
-			0,
-			(void*)0);
-
-  glEnableVertexAttribArray(1);
-  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[1]);
-  glVertexAttribPointer(1,
-			2,
-			GL_FLOAT,
-			GL_FALSE,
-			0,
-			(void*)0);
-
-  glEnableVertexAttribArray(2);
-  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[2]);
-  glVertexAttribPointer(2,
-			3,
-			GL_FLOAT,
-			GL_FALSE,
-			0,
-			(void*)0);
-
-  glDrawArrays(GL_TRIANGLES,0,3*num_triangles);
-  glDisableVertexAttribArray(0);
-  glDisableVertexAttribArray(1);
-  glDisableVertexAttribArray(2);
   SDL_GL_SwapWindow(window);
 }
 
