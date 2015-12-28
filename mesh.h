@@ -11,14 +11,16 @@
 class Transform{
  public:
   glm::vec3 position,rotation,scale;
+  glm::mat4 Evaluate(void);
+  Transform(void);
 };
 
 class Mesh{
  public:
-  Mesh(string modelPath,string texturePath);
-  void Draw(glm::mat4 VP,GLuint shaderMatrixLocation,GLuint shaderTextureLocation);
- protected:
+  Mesh(string modelPath,string texturePath,Transform *t=NULL);
+  void Draw(GLuint shaderMatrixLocation,GLuint shaderTextureLocation);
   Transform *transform;
+ protected:
   GLuint model[3],texture;
   unsigned int vertexNum;
 };

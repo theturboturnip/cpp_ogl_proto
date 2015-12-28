@@ -17,7 +17,7 @@ SDL_Window* window=NULL;
 SDL_GLContext glContext;
 bool shouldEnd=false;
 SDL_Event e;
-glm::mat4 VP;
+glm::mat4 V,P;
 GLuint ShaderProgramID,MatrixID,TextureID;
 Mesh *m;
 
@@ -92,6 +92,8 @@ int InitScene(void){
   glClearColor(0.0f,0.0f,0.4f,0.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
   GLuint VertexArrayID;
   glGenVertexArrays(1,&VertexArrayID);
   glBindVertexArray(VertexArrayID);
@@ -102,18 +104,28 @@ int InitScene(void){
   glGenBuffers(1,&VertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);*/
-  m=new Mesh("cube.obj","rock.png");
+  m=new Mesh("monkey.obj","rock.png",new Transform());
   ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","custom_fragment_shader.glsl");
   if(ShaderProgramID==0){
     fprintf(stderr,"Shader link failed\n");
     return 1;
   }
   //Getting MVP, giving to shader
-  MatrixID=glGetUniformLocation(ShaderProgramID, "MVP");
-  VP =FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix();
+  MatrixID=glGetUniformLocation(ShaderProgramID, "M");
+  GLuint ViewMatID=glGetUniformLocation(ShaderProgramID, "V"),ProjectionMatID=glGetUniformLocation(ShaderProgramID, "P"),LightPosID=glGetUniformLocation(ShaderProgramID, "LightPosition_worldspace");
+  fprintf(stderr,"%s\n",SDL_GetError());
+  //VP =FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix();
+  P=FindProjectionMatrix(0.1f,100.0f);
+  V=FindViewMatrix();
+  glUniformMatrix4fv(ViewMatID,1,GL_FALSE,&V[0][0]);
+  glUniformMatrix4fv(ProjectionMatID,1,GL_FALSE,&P[0][0]);
+  glUniform3f(LightPosID,4.0f,3.0f,3.0f);
+  fprintf(stderr,"%s\n",SDL_GetError());
+
   TextureID=glGetUniformLocation(ShaderProgramID,"textureSampler");
   return 0;
 }
+
 /*Basic object creation
  need vertex shader + fragment shader for entire object
  compile and store program
@@ -134,7 +146,8 @@ void MainLoop(void){
   }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
-  m->Draw(VP,MatrixID,TextureID);
+  m->Draw(MatrixID,TextureID);
+  m->transform->rotation.x+=0.1;
   SDL_GL_SwapWindow(window);
 }
 
