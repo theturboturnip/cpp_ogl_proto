@@ -15,6 +15,7 @@ out vec3 LightDirection_cameraspace;
 // Values that stay constant for the whole mesh.
 uniform mat4 M;
 uniform mat4 V;
+uniform mat4 P;
 uniform mat4 MVP;
 uniform vec3 LightPosition_worldspace;
 
