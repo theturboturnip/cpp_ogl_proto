@@ -24,6 +24,8 @@ glm::mat4 Transform::Evaluate(){
 }
 
 Mesh::Mesh(std::string modelPath,std::string texturePath,Transform *t){
+  glGenVertexArrays(1,&VertexArrayID);
+  glBindVertexArray(VertexArrayID);
   vertexNum=LoadModelFromFile(modelPath, model); // Returns 0 on ERROR
   texture=LoadTextureFromFile(texturePath, GL_RGB);
   transform=t;
