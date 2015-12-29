@@ -23,11 +23,12 @@ glm::mat4 Transform::Evaluate(){
   return toReturn;
 }
 
-Mesh::Mesh(std::string modelPath,std::string texturePath,Transform *t){
+Mesh::Mesh(Transform *t,std::string modelPath,std::string texturePath){
   //GLuint VertexArrayID;
   glGenVertexArrays(1,&VertexArrayID);
   glBindVertexArray(VertexArrayID);
   vertexNum=LoadModelFromFile(modelPath, model); // Returns 0 on ERROR
+  textureEnabled=false;
   if(texturePath!=""){
     texture=LoadTextureFromFile(texturePath, GL_RGB);
     textureEnabled=true;

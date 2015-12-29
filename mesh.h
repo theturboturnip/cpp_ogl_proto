@@ -17,11 +17,12 @@ class Transform{
 
 class Mesh{
  public:
-  Mesh(string modelPath,string texturePath,Transform *t=NULL);
-  void Draw(GLuint shaderMatrixLocation,GLuint shaderTextureLocation);
+  Mesh(Transform *t=NULL,string modelPath="",string texturePath="");
+  void Draw(GLuint shaderMatrixLocation,GLuint shaderTextureLocation=0);
   Transform *transform;
  protected:
   GLuint model[3],texture,VertexArrayID;
+  bool textureEnabled;
   unsigned int vertexNum;
 };
 
