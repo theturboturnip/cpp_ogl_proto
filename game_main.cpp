@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include "loader.h"
 
-#define NUM_KEYS 14
+#define NUM_KEYS 18
 static int keys[NUM_KEYS] = {
 SDLK_d, SDLK_a,
 SDLK_x, SDLK_z,
@@ -20,6 +20,8 @@ SDLK_r, SDLK_q,
 SDLK_o, SDLK_p,
 SDLK_m, SDLK_n,
 SDLK_i, SDLK_j,
+SDLK_f, SDLK_g,
+SDLK_h, SDLK_b,
 };
 
 class c_main
@@ -273,8 +275,8 @@ c_main::draw_cube(float x, float y, float z)
     glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,NULL);
     glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[2]);
     glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,0,NULL);
-    glDrawArrays(GL_TRIANGLES,0,3*num_triangles);
     glDrawArrays(GL_LINES,0,3*num_triangles);
+    glDrawArrays(GL_TRIANGLES,0,3*num_triangles);
 }
 
 void
@@ -310,6 +312,10 @@ SDL_Event e;
   if (keys_down[11]) { head_yaw += 1; }
   if (keys_down[12]) { head_pitch -= 1; }
   if (keys_down[13]) { head_pitch += 1; }
+  if (keys_down[14]) { body_facing = glm::rotate( body_facing, glm::radians(2.0f), glm::vec3(0,0,1) ); }
+  if (keys_down[15]) { body_facing = glm::rotate( body_facing, glm::radians(-2.0f), glm::vec3(0,0,1) ); }
+  if (keys_down[16]) { body_pos = body_pos + body_facing * 0.25f; }
+  if (keys_down[17]) { body_pos = body_pos - body_facing * 0.25f; }
   head_yaw = 0.97*head_yaw;
   head_pitch = 0.97*head_pitch;
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
