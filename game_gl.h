@@ -13,6 +13,8 @@
 #include <glm/gtx/transform.hpp>
 #include <cstdlib>
 
+#define GAME_GL_MAX_MESH 32
+#define GAME_GL_MAX_TEXTURES 32
 class c_game_gl
 {
 public:
@@ -24,11 +26,9 @@ public:
     glm::mat4 FindModelMatrix(float x, float y, float z, float scale);
     void draw(void);
     void draw_start(void);
-    void draw_cube(float x, float y, float z);
+    void draw_cube(float x, float y, float z, int mesh, int texture);
     void draw_complete(void);
 
-    GLuint tetra_buffers[3];
-    int num_triangles;
     float aspect_ratio;
     glm::mat4 M;
     glm::mat4 V;
@@ -42,12 +42,14 @@ public:
     GLuint TextureID;
     GLuint VertexArrayID;
     GLuint LightPosID;
-    GLuint texture;
 
     float FOV;
     float head_yaw, head_pitch;
     glm::vec3 body_pos;
     glm::vec3 body_facing; // z is probably 0
+
+    class c_mesh *meshes[GAME_GL_MAX_MESH];
+    class c_texture *textures[GAME_GL_MAX_TEXTURES];
 };
 
 #endif // __INC_GAME_GL_H__
