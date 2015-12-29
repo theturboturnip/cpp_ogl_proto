@@ -199,7 +199,7 @@ c_main::MainLoop(void)
 
         hud->clear();
         SDL_Color a={255, 255, 255};
-        sprintf(text, "%5.2ffps time %dms", 1000.0f/(last_time_out-prev_time_out), (last_time_out - prev_time_out));
+        sprintf(text, "%5dfps time %dms", 1000/(last_time_out-prev_time_out), (last_time_out - prev_time_out));
         hud->draw_text(100,100,text,a);
         hud->display();
     }

@@ -32,12 +32,13 @@ c_hud::init(void)
     }
 
     GL.texture_id = glGetUniformLocation(GL.program_id,"textureSampler");
+    glUniform1i(GL.texture_id,0);
 
     TTF_Init();
     //For mac tahoma location is /Library/Fonts/Tahoma.ttf
     //For linux tahoma location is /usr/share/fonts/truetype/ubuntu-font-family/Tahoma.ttf
-    SDL.font = TTF_OpenFont("/usr/share/fonts/truetype/ubuntu-font-family/Tahoma.ttf", 24);
-    //SDL.font = TTF_OpenFont("FreeSans.ttf", 24);
+    //SDL.font = TTF_OpenFont("/usr/share/fonts/truetype/ubuntu-font-family/Tahoma.ttf", 24);
+    SDL.font = TTF_OpenFont("zxpix.ttf", 16);
     if (SDL.font == NULL) {
         fprintf(stderr,"HUD font load failed\n");
         return 0;
