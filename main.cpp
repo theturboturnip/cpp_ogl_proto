@@ -8,7 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtx/transform.hpp>
 #include <cstdlib>
-//#include "loader.h"
+#include "loader.h"
 #include "mesh.h"
 
 int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
@@ -18,7 +18,7 @@ SDL_GLContext glContext;
 bool shouldEnd=false;
 SDL_Event e;
 glm::mat4 V,P;
-GLuint ShaderProgramID,MatrixID,TextureID;
+GLuint ShaderProgramID,MatrixID,TextureID,RockTexture,Rock2Texture;
 Mesh *m;
 
 void checkSDLError(void)
@@ -105,7 +105,7 @@ int InitScene(void){
   glGenBuffers(1,&VertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);*/
-  m=new Mesh("monkey.obj","rock.png",new Transform());
+  m=new Mesh(new Transform(),"monkey.obj");
   ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","custom_fragment_shader.glsl");
   glUseProgram(ShaderProgramID);
   if(ShaderProgramID==0){
@@ -124,7 +124,15 @@ int InitScene(void){
   glUniform3f(LightPosID,4.0f,3.0f,3.0f);
   checkSDLError();
   TextureID=glGetUniformLocation(ShaderProgramID,"textureSampler");
+  LoadTextureFromFile("rock.png",RockTexture);
+  LoadTextureFromFile("rock2.png",Rock2Texture);
   return 0;
+}
+
+void BindTexture(GLuint texture){
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glUniform1i(TextureID,0);
 }
 
 /*Basic object creation
@@ -147,8 +155,12 @@ void MainLoop(void){
   }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
-  m->Draw(MatrixID,TextureID);
+  BindTexture(RockTexture);
+  m->Draw(MatrixID);
   m->transform->rotation.x+=0.1;
+  //BindTexture(Rock2Texture,TextureID);
+  //m->Draw(MatrixID);
+  //m->transform->position.x=0.0;
   SDL_GL_SwapWindow(window);
 }
 
