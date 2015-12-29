@@ -97,7 +97,6 @@ int InitScene(void){
   glDepthFunc(GL_LESS);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
-  GLuint VertexArrayID;
   
   /*GLfloat g_vertex_buffer_data[] = {
     -1.0f,-1.0f,0.0f,

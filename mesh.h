@@ -21,7 +21,7 @@ class Mesh{
   void Draw(GLuint shaderMatrixLocation,GLuint shaderTextureLocation);
   Transform *transform;
  protected:
-  GLuint model[3],texture;
+  GLuint model[3],texture,VertexArrayID;
   unsigned int vertexNum;
 };
 
