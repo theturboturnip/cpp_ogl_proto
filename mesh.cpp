@@ -33,12 +33,12 @@ void Mesh::Draw(GLuint shaderMatrixLocation,GLuint shaderTextureLocation){
   //Scale,rotate,translate for model matrix
   //Calculate MVP Matrix
   glm::mat4 M;
-  if (transform!=NULL){
+  if (transform!=NULL&&false){
     M=transform->Evaluate();//glm::translate(transform->position)*glm::scale(transform->scale);
     //MVP=VP*M;
   }else {
       glm::mat4 a;
-      a = glm::mat4(10.0f);
+      a = glm::mat4(1.0f);
       a[3][3] = 1.0;//.00.1;
       M=a; //glm::mat4(12.0f);
   }

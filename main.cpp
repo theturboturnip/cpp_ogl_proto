@@ -29,6 +29,9 @@ void checkSDLError(void)
 		fprintf(stderr,"SDL Error: %s\n", error);
 		SDL_ClearError();
 	}
+	GLuint GLError=glGetError();
+	if (GLError!=0)
+	  fprintf(stderr,"OpenGL Error: %d\n",GLError);
 }
 
 glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip){
@@ -106,6 +109,7 @@ int InitScene(void){
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);*/
   m=new Mesh("monkey.obj","rock.png",new Transform());
   ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","custom_fragment_shader.glsl");
+  glUseProgram(ShaderProgramID);
   if(ShaderProgramID==0){
     fprintf(stderr,"Shader link failed\n");
     return 1;
@@ -113,15 +117,14 @@ int InitScene(void){
   //Getting MVP, giving to shader
   MatrixID=glGetUniformLocation(ShaderProgramID, "M");
   GLuint ViewMatID=glGetUniformLocation(ShaderProgramID, "V"),ProjectionMatID=glGetUniformLocation(ShaderProgramID, "P"),LightPosID=glGetUniformLocation(ShaderProgramID, "LightPosition_worldspace");
-  fprintf(stderr,"%s\n",SDL_GetError());
+  checkSDLError();
   //VP =FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix();
   P=FindProjectionMatrix(0.1f,100.0f);
   V=FindViewMatrix();
   glUniformMatrix4fv(ViewMatID,1,GL_FALSE,&V[0][0]);
   glUniformMatrix4fv(ProjectionMatID,1,GL_FALSE,&P[0][0]);
   glUniform3f(LightPosID,4.0f,3.0f,3.0f);
-  fprintf(stderr,"%s\n",SDL_GetError());
-
+  checkSDLError();
   TextureID=glGetUniformLocation(ShaderProgramID,"textureSampler");
   return 0;
 }
