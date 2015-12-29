@@ -219,7 +219,6 @@ c_main::InitScene(void)
   M_MatrixID   = glGetUniformLocation(ShaderProgramID, "M");
   V_MatrixID   = glGetUniformLocation(ShaderProgramID, "V");
   P_MatrixID   = glGetUniformLocation(ShaderProgramID, "P");
-  MVP_MatrixID = glGetUniformLocation(ShaderProgramID, "MVP");
 
   TextureID = glGetUniformLocation(ShaderProgramID,"textureSampler");
   return 1;
@@ -237,7 +236,7 @@ c_main::draw_start(void)
 {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    //glCullFace(GL_FRONT);
+    //glCullFace(GL_FRONT); // You can try this to cull front faces for fun :-)
     glActiveTexture(GL_TEXTURE0); // Uset texture unit 0 throughout
     V = FindViewMatrix();
     P = FindProjectionMatrix(0.1f,100.0f);
@@ -254,9 +253,9 @@ c_main::draw_start(void)
 void
 c_main::draw_complete(void)
 {
-  glDisableVertexAttribArray(0);
-  glDisableVertexAttribArray(1);
-  glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
 }
 
 void
@@ -264,19 +263,18 @@ c_main::draw_cube(float x, float y, float z)
 {
 
     M = FindModelMatrix(x,y,z,5);
-  MVP = P*V*M;
-  glUniformMatrix4fv(M_MatrixID,  1,GL_FALSE,&M[0][0]);
-  glUniformMatrix4fv(MVP_MatrixID,1,GL_FALSE,&MVP[0][0]);
+    glUniformMatrix4fv(M_MatrixID,  1,GL_FALSE,&M[0][0]);
 
-  glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
-  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[0]);
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,NULL);
-  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[1]);
-  glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,NULL);
-  glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[2]);
-  glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,0,NULL);
-  glDrawArrays(GL_TRIANGLES,0,3*num_triangles);
+    glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[0]);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,NULL);
+    glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[1]);
+    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,NULL);
+    glBindBuffer(GL_ARRAY_BUFFER, tetra_buffers[2]);
+    glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,0,NULL);
+    glDrawArrays(GL_TRIANGLES,0,3*num_triangles);
+    glDrawArrays(GL_LINES,0,3*num_triangles);
 }
 
 void
