@@ -16,7 +16,7 @@ CPPFLAGS  = -Wall -I$(GLM) -iframework /Library/Frameworks -I/Library/Frameworks
 endif
 
 OBJS = main.o loader.o mesh.o
-GAME_OBJS  = game_main.o loader.o game.o game_level.o hud.o
+GAME_OBJS  = game_main.o loader.o game.o game_level.o game_gl.o hud.o
 
 prog: $(OBJS)
 	$(LINK) $(OBJS) $(LINKFLAGS) -o prog
