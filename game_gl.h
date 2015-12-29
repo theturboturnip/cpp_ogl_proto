@@ -24,7 +24,7 @@ public:
     glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip);
     glm::mat4 FindViewMatrix(void);
     glm::mat4 FindModelMatrix(float x, float y, float z, float scale);
-    void draw(void);
+    void draw(class c_game_level *level);
     void draw_start(void);
     void draw_cube(float x, float y, float z, int mesh, int texture);
     void draw_complete(void);

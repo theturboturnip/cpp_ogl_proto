@@ -47,6 +47,8 @@ public:
     bool shouldEnd;
     int screen_width, screen_height;
     c_hud *hud;
+    c_game_level *level;
+
     int hud_active;
     int prev_time_out;
     int last_time_out;
@@ -92,6 +94,12 @@ int c_main::Init(void)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     checkSDLError();
 
+    level = new c_game_level();
+    if (level->load_from_file("levels/starter.lvl")==0) {
+        return 0;
+    }
+
+    fprintf(stderr,"Main Init() completed\n");
     return 1;
 }
 
@@ -191,7 +199,7 @@ c_main::MainLoop(void)
     game_gl->head_yaw = 0.97*game_gl->head_yaw;
     game_gl->head_pitch = 0.97*game_gl->head_pitch;
 
-    game_gl->draw();
+    game_gl->draw(level);
 
     if (hud_active) {
         char text[256];
@@ -222,11 +230,6 @@ c_main::LoopForever(void)
 int main(int argc,char *argv[]){
     int screen_width, screen_height;
     c_main *m;
-    c_game_level *level;
-    level = new c_game_level();
-    if (level->load_from_file("levels/starter.lvl")==0) {
-        return 4;
-    }
 
     screen_width = 640;
     screen_height = 512;
@@ -236,7 +239,10 @@ int main(int argc,char *argv[]){
     }
 
     m = new c_main(screen_width, screen_height);
-    m->Init();
+    if (m->Init()==0) {
+        fprintf(stderr,"Game initializtion failed\n");
+        return 4;
+    }
     if (!m->CreateWindow(screen_width, screen_height)) {
         fprintf(stderr,"Create window failed\n");
         return 4;

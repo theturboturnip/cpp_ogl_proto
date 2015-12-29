@@ -1,4 +1,4 @@
-typedef char t_level_cube;
+typedef unsigned int t_level_cube;
 
 class c_game_level {
 public:

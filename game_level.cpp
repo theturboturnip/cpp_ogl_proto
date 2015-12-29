@@ -137,6 +137,8 @@ c_game_level::load_from_file(const char *level_filename)
 
     fscanf(level_file, "%d %d %d\n",dimensions, dimensions+1, dimensions+2);
 
+    size(dimensions[0],dimensions[1],dimensions[2]);
+
     if (!skip_separator(level_filename, level_file)) return 0;
     while (!is_separator(level_file)) {
         char ch;
@@ -159,6 +161,7 @@ c_game_level::load_from_file(const char *level_filename)
         new_mapping->mesh = mesh;
         new_mapping->texture = texture;
         new_mapping->cube = (mesh<<8) | (texture<<0);
+        fprintf(stderr, "Char '%c' is mesh %d texture %d cube %d\n", new_mapping->ch, new_mapping->mesh, new_mapping->texture, new_mapping->cube );
     }
 
     for (z=0; z<dimensions[2]; z++) {

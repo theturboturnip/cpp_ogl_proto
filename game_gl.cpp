@@ -12,6 +12,7 @@
 #include "loader.h"
 #include "hud.h"
 #include "game_gl.h"
+#include "game_level.h"
 
 class c_mesh
 {
@@ -229,14 +230,23 @@ c_game_gl::draw_cube(float x, float y, float z, int mesh, int texture)
 }
 
 void
-c_game_gl::draw(void)
+c_game_gl::draw(class c_game_level *level)
 {
-    int i;
+    int x, y, z;
+    t_level_cube cube;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    if (level->cubes == NULL) return;
     draw_start();
-    for (i=0; i<10; i++) {
-        draw_cube(i,0,i,1+(i&1),(i>5)?31:1);
+    for (x=0; x<level->dimensions[0]; x++) {
+        for (y=0; y<level->dimensions[1]; y++) {
+            for (z=0; z<level->dimensions[2]; z++) {
+                cube = *(level->cube_of_pos(x,y,z));
+                if (cube!=0) {
+                    draw_cube(x,y,z,cube>>8,cube&0xff);
+                }
+            }
+        }
     }
     draw_complete();
 }
