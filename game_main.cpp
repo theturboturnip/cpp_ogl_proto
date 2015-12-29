@@ -12,6 +12,7 @@
 #include "loader.h"
 #include "hud.h"
 #include "game_gl.h"
+#include "game_level.h"
 
 #define NUM_KEYS 20
 static int keys[NUM_KEYS] = {
@@ -221,6 +222,11 @@ c_main::LoopForever(void)
 int main(int argc,char *argv[]){
     int screen_width, screen_height;
     c_main *m;
+    c_game_level *level;
+    level = new c_game_level();
+    if (level->load_from_file("levels/starter.lvl")==0) {
+        return 4;
+    }
 
     screen_width = 640;
     screen_height = 512;

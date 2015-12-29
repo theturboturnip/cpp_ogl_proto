@@ -8,6 +8,8 @@ public:
     t_level_cube *cubes;
     void set_cube(int x, int y, int z, t_level_cube cube);
     void fill_region(int corner[0], int sizes[0], t_level_cube cube);
+    void size(int a, int b, int c);
+    int load_from_file(const char *level_filename);
     inline int bound_dimension(int pos, int d) {
         if (!cubes) return 0;
         if (pos<0) return 0;
