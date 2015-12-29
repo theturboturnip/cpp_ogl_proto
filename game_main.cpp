@@ -10,8 +10,9 @@
 #include <glm/gtx/transform.hpp>
 #include <cstdlib>
 #include "loader.h"
+#include "hud.h"
 
-#define NUM_KEYS 18
+#define NUM_KEYS 20
 static int keys[NUM_KEYS] = {
 SDLK_d, SDLK_a,
 SDLK_x, SDLK_z,
@@ -22,6 +23,7 @@ SDLK_m, SDLK_n,
 SDLK_i, SDLK_j,
 SDLK_f, SDLK_g,
 SDLK_h, SDLK_b,
+SDLK_1, SDLK_2
 };
 
 class c_main
@@ -67,6 +69,10 @@ public:
     float head_yaw, head_pitch;
     glm::vec3 body_pos;
     glm::vec3 body_facing; // z is probably 0
+    c_hud *hud;
+    int hud_active;
+    int prev_time_out;
+    int last_time_out;
 };
 
 c_main::c_main(int screen_width, int screen_height)
@@ -85,6 +91,7 @@ c_main::c_main(int screen_width, int screen_height)
     for (i=0; i<NUM_KEYS; i++) {
         keys_down[i] = 0;
     }
+    hud_active = 0;
 }
 
 void
@@ -178,6 +185,8 @@ c_main::CreateWindow(int width, int height)
         return 0;
     }
 
+    hud = new c_hud(width,height);
+
     glContext=  SDL_GL_CreateContext(window);
     if (!glContext) {
         return 0;
@@ -189,6 +198,10 @@ c_main::CreateWindow(int width, int height)
         SDL_GL_GetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, &minor );
         checkSDLError();
         fprintf(stderr, "Using OpenGL version %d.%d\n",major,minor);
+    }
+
+    if (hud->init() == 0) {
+        fprintf(stderr, "Failed to initialize HUD\n");
     }
     return 1;
 }
@@ -223,6 +236,7 @@ c_main::InitScene(void)
   P_MatrixID   = glGetUniformLocation(ShaderProgramID, "P");
 
   TextureID = glGetUniformLocation(ShaderProgramID,"textureSampler");
+
   return 1;
 }
 
@@ -236,6 +250,7 @@ c_main::InitScene(void)
 void
 c_main::draw_start(void)
 {
+    glUseProgram(ShaderProgramID);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     //glCullFace(GL_FRONT); // You can try this to cull front faces for fun :-)
@@ -283,7 +298,11 @@ void
 c_main::MainLoop(void)
 {
     int i;
-SDL_Event e;
+    SDL_Event e;
+    int time_in;
+    time_in = SDL_GetTicks();
+    SDL_Color textColor = { 255, 255, 255, 255 };
+
   while (SDL_PollEvent(&e)!=0){
     if (e.type==SDL_QUIT)
       shouldEnd=true;
@@ -316,10 +335,12 @@ SDL_Event e;
   if (keys_down[15]) { body_facing = glm::rotate( body_facing, glm::radians(-2.0f), glm::vec3(0,0,1) ); }
   if (keys_down[16]) { body_pos = body_pos + body_facing * 0.25f; }
   if (keys_down[17]) { body_pos = body_pos - body_facing * 0.25f; }
+  if (keys_down[18]) { hud_active = 1; }
+  if (keys_down[19]) { hud_active = 0; }
   head_yaw = 0.97*head_yaw;
   head_pitch = 0.97*head_pitch;
+
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glUseProgram(ShaderProgramID);
 
   draw_start();
   for (i=0; i<10; i++) {
@@ -327,7 +348,22 @@ SDL_Event e;
   }
   draw_complete();
 
+  if (hud_active) {
+      char text[256];
+      int time_now;
+      time_now = SDL_GetTicks();
+
+      hud->clear();
+      SDL_Color a={255, 255, 255};
+      sprintf(text, "%5.2ffps time %dms", 1000.0f/(last_time_out-prev_time_out), (last_time_out - prev_time_out));
+      hud->draw_text(100,100,text,a);
+      hud->display();
+  }
+
   SDL_GL_SwapWindow(window);
+  prev_time_out = last_time_out;
+  last_time_out = SDL_GetTicks();
+
 }
 
 void
