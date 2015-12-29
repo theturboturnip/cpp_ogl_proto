@@ -16,10 +16,13 @@ out vec3 LightDirection_cameraspace;
 uniform mat4 M;
 uniform mat4 V;
 uniform mat4 P;
-uniform mat4 MVP;
 uniform vec3 LightPosition_worldspace;
 
 void main(){
+     mat4 MVP;
+
+     MVP = P * V * M;
+
     // Output position of the vertex, in clip space : MVP * position
     gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
 
