@@ -95,6 +95,10 @@ skip_separator(const char *level_filename, FILE *level_file)
     }
     if (fgetc(level_file)!='-') load_error(level_filename, level_file, "Bad separator");
     if (fgetc(level_file)!='-') load_error(level_filename, level_file, "Bad separator");
+    while (!feof(level_file)) {
+        ch = fgetc(level_file);
+        if (ch=='\n') break;
+    }
     return 1;
 }
 static int

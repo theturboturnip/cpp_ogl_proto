@@ -79,8 +79,11 @@ static struct game_gl_mesh meshes_to_load[] =
 
 static struct game_gl_texture textures_to_load[] =
 {
-    {"rock.png", 2},
-    {"wood.png", 1},
+    {"wood.png",     1},
+    {"rock.png",     2},
+    {"brick.png",    3},
+    {"earth.png",    4},
+    {"conveyor.png", 5},
     {"red_green.png", 31},
     {NULL, -1},
 };
@@ -109,6 +112,9 @@ glm::mat4 c_game_gl::FindProjectionMatrix(float zNearClip,float zFarClip)
 
 glm::mat4 c_game_gl::FindViewMatrix(void)
 {
+    return glm::lookAt(glm::vec3(body_pos[0],body_pos[1]-20.0,body_pos[2]),
+                       glm::vec3(body_pos[0],body_pos[1]+0.0,body_pos[2]),
+                       glm::vec3(0,0,1)); // Z is up
     // direction facting is (body_facing rotated by yaw around Z) rotated by pitch around X
     glm::vec3 eye_direction;
     eye_direction = glm::rotate( body_facing, glm::radians(head_yaw), glm::vec3(0,0,1) );
