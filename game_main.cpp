@@ -5,18 +5,21 @@
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtx/transform.hpp>
 #include <cstdlib>
 #include "loader.h"
 
-#define NUM_KEYS 10
+#define NUM_KEYS 14
 static int keys[NUM_KEYS] = {
-SDLK_a, SDLK_d,
-SDLK_w, SDLK_s,
-SDLK_z, SDLK_x,
+SDLK_d, SDLK_a,
+SDLK_x, SDLK_z,
+SDLK_s, SDLK_w,
 SDLK_r, SDLK_q,
 SDLK_o, SDLK_p,
+SDLK_m, SDLK_n,
+SDLK_i, SDLK_j,
 };
 
 class c_main
@@ -32,8 +35,8 @@ public:
     int CreateWindow(int width, int height);
     int InitScene(void);
     glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip);
-    glm::mat4 FindViewMatrix(float lookat[3]);
-    glm::mat4 FindModelMatrix(float x, float y, float z);
+    glm::mat4 FindViewMatrix(void);
+    glm::mat4 FindModelMatrix(float x, float y, float z, float scale);
     void draw_start(void);
     void draw_cube(float x, float y, float z);
     void draw_complete(void);
@@ -41,7 +44,6 @@ public:
     SDL_Window    *window;
     SDL_GLContext glContext;
     GLuint tetra_buffers[3];
-    float lookat[3];
     int num_triangles;
     glm::mat4 M;
     glm::mat4 V;
@@ -60,6 +62,9 @@ public:
     bool shouldEnd;
     int screen_width, screen_height;
     float FOV;
+    float head_yaw, head_pitch;
+    glm::vec3 body_pos;
+    glm::vec3 body_facing; // z is probably 0
 };
 
 c_main::c_main(int screen_width, int screen_height)
@@ -68,9 +73,11 @@ c_main::c_main(int screen_width, int screen_height)
     this->screen_width = screen_width;
     this->screen_height = screen_height;
     window = NULL;
-    lookat[0] = 4.0;
-    lookat[1] = 3.0;
-    lookat[2] = 3.0;
+    body_pos    = glm::vec3(4.0,3.0,3.0);
+    body_facing = glm::vec3(-1.0,-1.0,0.0);
+    body_facing = glm::normalize(body_facing);
+    head_yaw = 0;
+    head_pitch = 0;
     shouldEnd = false;
     FOV = 45;
     for (i=0; i<NUM_KEYS; i++) {
@@ -107,14 +114,19 @@ glm::mat4 c_main::FindProjectionMatrix(float zNearClip,float zFarClip){
   return glm::perspective(FOVrads,aspect,zNearClip,zFarClip);
 }
 
-glm::mat4 c_main::FindViewMatrix(float lookat[3]){
-    return glm::lookAt(glm::vec3(lookat[0],lookat[1],lookat[2]),
-                       glm::vec3(0,0,0),
-                       glm::vec3(0,1,0));
+glm::mat4 c_main::FindViewMatrix(void){
+    // direction facting is (body_facing rotated by yaw around Z) rotated by pitch around X
+    glm::vec3 eye_direction;
+    eye_direction = glm::rotate( body_facing, glm::radians(head_yaw), glm::vec3(0,0,1) );
+    eye_direction = glm::rotate( eye_direction, glm::radians(head_pitch), glm::vec3(1,0,0) );
+    return glm::lookAt(body_pos,
+                       body_pos + eye_direction,
+                       glm::vec3(0,0,1)); // Z is up
 }
-glm::mat4 c_main::FindModelMatrix(float x, float y,float z){
+
+glm::mat4 c_main::FindModelMatrix(float x, float y,float z, float scale){
     glm::mat4 a;
-a = glm::mat4(5.0f);
+a = glm::mat4(scale);
 a[3][0] = x;
 a[3][1] = y;
 a[3][2] = z;
@@ -227,7 +239,7 @@ c_main::draw_start(void)
     glCullFace(GL_BACK);
     //glCullFace(GL_FRONT);
     glActiveTexture(GL_TEXTURE0); // Uset texture unit 0 throughout
-    V = FindViewMatrix(lookat);
+    V = FindViewMatrix();
     P = FindProjectionMatrix(0.1f,100.0f);
     glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&V[0][0]);
     glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&P[0][0]);
@@ -251,7 +263,7 @@ void
 c_main::draw_cube(float x, float y, float z)
 {
 
-    M = FindModelMatrix(x,y,z);
+    M = FindModelMatrix(x,y,z,5);
   MVP = P*V*M;
   glUniformMatrix4fv(M_MatrixID,  1,GL_FALSE,&M[0][0]);
   glUniformMatrix4fv(MVP_MatrixID,1,GL_FALSE,&MVP[0][0]);
@@ -286,16 +298,22 @@ SDL_Event e;
         }
     }
   }
-  if (keys_down[0]) { lookat[0]-=0.1; }
-  if (keys_down[1]) { lookat[0]+=0.1; }
-  if (keys_down[2]) { lookat[1]-=0.1; }
-  if (keys_down[3]) { lookat[1]+=0.1; }
-  if (keys_down[4]) { lookat[2]-=0.1; }
-  if (keys_down[5]) { lookat[2]+=0.1; }
-  if (keys_down[6]) { lookat[0]=4.0; lookat[1]=3.0; lookat[2]=3.0; }
+  if (keys_down[0]) { body_pos[0]-=0.1; }
+  if (keys_down[1]) { body_pos[0]+=0.1; }
+  if (keys_down[2]) { body_pos[1]-=0.1; }
+  if (keys_down[3]) { body_pos[1]+=0.1; }
+  if (keys_down[4]) { body_pos[2]-=0.1; }
+  if (keys_down[5]) { body_pos[2]+=0.1; }
+  if (keys_down[6]) { body_pos[0]=4.0; body_pos[1]=3.0; body_pos[2]=3.0; }
   if (keys_down[7]) { shouldEnd = true; }
   if (keys_down[8]) { FOV -= 1; }
   if (keys_down[9]) { FOV += 1; }
+  if (keys_down[10]) { head_yaw -= 1; }
+  if (keys_down[11]) { head_yaw += 1; }
+  if (keys_down[12]) { head_pitch -= 1; }
+  if (keys_down[13]) { head_pitch += 1; }
+  head_yaw = 0.97*head_yaw;
+  head_pitch = 0.97*head_pitch;
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(ShaderProgramID);
 
