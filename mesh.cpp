@@ -24,11 +24,14 @@ glm::mat4 Transform::Evaluate(){
 }
 
 Mesh::Mesh(std::string modelPath,std::string texturePath,Transform *t){
-  GLuint VertexArrayID;
+  //GLuint VertexArrayID;
   glGenVertexArrays(1,&VertexArrayID);
   glBindVertexArray(VertexArrayID);
   vertexNum=LoadModelFromFile(modelPath, model); // Returns 0 on ERROR
-  texture=LoadTextureFromFile(texturePath, GL_RGB);
+  if(texturePath!=""){
+    texture=LoadTextureFromFile(texturePath, GL_RGB);
+    textureEnabled=true;
+  }
   transform=t;
 }
 void Mesh::Draw(GLuint shaderMatrixLocation,GLuint shaderTextureLocation){
@@ -48,9 +51,11 @@ void Mesh::Draw(GLuint shaderMatrixLocation,GLuint shaderTextureLocation){
   //Apply MVP Matrix
   glUniformMatrix4fv(shaderMatrixLocation,1,GL_FALSE,&M[0][0]);
   //Apply Texture 
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture);
-  glUniform1i(shaderTextureLocation,0);
+  if(textureEnabled){
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glUniform1i(shaderTextureLocation,0);
+  }
   //Enable Arrays
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
