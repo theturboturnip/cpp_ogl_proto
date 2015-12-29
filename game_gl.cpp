@@ -234,7 +234,7 @@ c_game_gl::draw(void)
 
     draw_start();
     for (i=0; i<10; i++) {
-        draw_cube(i,i,0,1+(i&1),1);
+        draw_cube(i,0,i,1+(i&1),1);
     }
     draw_complete();
 }
