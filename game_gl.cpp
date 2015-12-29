@@ -78,7 +78,9 @@ static struct game_gl_mesh meshes_to_load[] =
 
 static struct game_gl_texture textures_to_load[] =
 {
-    {"rock.png", 1},
+    {"rock.png", 2},
+    {"wood.png", 1},
+    {"red_green.png", 31},
     {NULL, -1},
 };
 
@@ -234,7 +236,7 @@ c_game_gl::draw(void)
 
     draw_start();
     for (i=0; i<10; i++) {
-        draw_cube(i,0,i,1+(i&1),1);
+        draw_cube(i,0,i,1+(i&1),(i>5)?31:1);
     }
     draw_complete();
 }
