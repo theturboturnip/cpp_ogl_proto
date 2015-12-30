@@ -176,13 +176,8 @@ c_main::MainLoop(void)
             }
         }
     }
-    if (keys_down[0]) { level->player.x_m_8-=1; }
-    if (keys_down[1]) { level->player.x_m_8+=1; }
-    if (keys_down[2]) { level->player.y_m_8-=1; }
-    if (keys_down[3]) { level->player.y_m_8+=1; }
-    if (keys_down[4]) { level->player.z_m_8-=1; }
-    if (keys_down[5]) { level->player.z_m_8+=1; }
-    if (keys_down[6]) { level->player.x_m_8=5*8; level->player.y_m_8=0*8; level->player.z_m_8=3*8; }
+    level->keys_down = &keys_down[0];
+    level->tick();
     if (keys_down[7]) { shouldEnd = true; }
     if (keys_down[8]) { game_gl->FOV -= 1; }
     if (keys_down[9]) { game_gl->FOV += 1; }
@@ -202,7 +197,7 @@ c_main::MainLoop(void)
     game_gl->draw(level);
 
     if (hud_active) {
-        char text[256];
+        char text[1024];
         int time_now;
         time_now = SDL_GetTicks();
 
@@ -210,6 +205,8 @@ c_main::MainLoop(void)
         SDL_Color a={255, 255, 255};
         sprintf(text, "%5dfps time %dms", 1000/(last_time_out-prev_time_out), (last_time_out - prev_time_out));
         hud->draw_text(100,100,text,a);
+        level->display(text,sizeof(text));
+        hud->draw_text(100,200,text,a);
         hud->display();
     }
 

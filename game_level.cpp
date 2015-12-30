@@ -1,6 +1,7 @@
 #include "game_level.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 
 c_game_level::c_game_level(void)
@@ -9,6 +10,7 @@ c_game_level::c_game_level(void)
     dimensions[1] = 20;
     dimensions[2] = 20;
     cubes = NULL;
+    reset_cubes = NULL;
     player.x_m_8 = 5*8;
     player.y_m_8 = 0*8;
     player.z_m_8 = 3*8;
@@ -23,7 +25,8 @@ c_game_level::size(int a, int b, int c)
     dimensions[0] = a;
     dimensions[1] = b;
     dimensions[2] = c;
-    cubes = (t_level_cube *)malloc(sizeof(t_level_cube) * dimensions[0] * dimensions[1] * dimensions[2]);
+    cubes_size = sizeof(t_level_cube) * dimensions[0] * dimensions[1] * dimensions[2];
+    cubes = (t_level_cube *)malloc(cubes_size);
 }
 
 c_game_level::~c_game_level(void)
@@ -205,5 +208,71 @@ c_game_level::load_from_file(const char *level_filename)
         mapping = mapping->next;
         free(ptr);
     }
+
+    reset(1);
     return 1;
 }      
+
+void
+c_game_level::reset(int set_reset)
+{
+    if (set_reset) {
+        if (reset_cubes) free(reset_cubes);
+        reset_cubes = (t_level_cube *)malloc(cubes_size);
+        if (!reset_cubes) return;
+        memcpy(reset_cubes, cubes, cubes_size);
+        reset_player = player;
+        return;
+    }
+    memcpy(cubes, reset_cubes, cubes_size);
+    player = reset_player;
+    jumping = 0;
+}
+
+void
+c_game_level::tick(void)
+{
+    int delta_x, delta_z, jump_request;
+    int new_x;
+    delta_x = 0;
+    delta_z = 0;
+    jump_request = 0;
+    if (keys_down[0]) { delta_x = -2; }
+    if (keys_down[1]) { delta_x = 2; }
+    if (keys_down[4]) { jump_request = 1; }
+    new_x = player.x_m_8 + delta_x;
+    if ((cube_of_pos((new_x)>>3,0,player.z_m_8>>3))[0]!=0) {
+        if (delta_x<0) delta_x=0;
+    }
+    if ((cube_of_pos((new_x+8)>>3,0,player.z_m_8>>3))[0]!=0) {
+        if (delta_x>0) delta_x=0;
+    }
+    player.x_m_8 += delta_x;
+    if (jumping==0) {
+        if ((player.z_m_8 & 7)==0) {
+            if (cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]==0) {
+                delta_z = -1;
+            }
+            else if (jump_request) {
+                jumping = 16;
+            }
+        } else {
+            delta_z = -1;
+        }
+    } else {
+        delta_z = 1;
+        if (jumping>4) delta_z=1;
+        jumping-=1;
+    }
+    player.z_m_8 += delta_z;
+    if (keys_down[6]) { reset(); }
+}
+
+void
+c_game_level::display(char *buffer, int size)
+{
+    snprintf(buffer, size, "Player pos %d.%d , %d.%d jumping %d",
+             player.x_m_8>>3, player.x_m_8&7,
+             player.z_m_8>>3, player.z_m_8&7,
+             jumping);
+}
