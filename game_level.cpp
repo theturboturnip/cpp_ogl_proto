@@ -210,6 +210,7 @@ c_game_level::load_from_file(const char *level_filename)
     }
 
     reset(1);
+    reset(0);
     return 1;
 }      
 
@@ -271,7 +272,7 @@ c_game_level::tick(void)
 void
 c_game_level::display(char *buffer, int size)
 {
-    snprintf(buffer, size, "Player pos %d.%d , %d.%d jumping %d",
+    snprintf(buffer, size, "Player pos %d.%d , %d.%d\nJumping %d",
              player.x_m_8>>3, player.x_m_8&7,
              player.z_m_8>>3, player.z_m_8&7,
              jumping);

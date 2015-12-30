@@ -190,12 +190,14 @@ c_game_gl::draw_start(class c_game_level *level)
     glCullFace(GL_BACK);
 //glCullFace(GL_FRONT); // You can try this to cull front faces for fun :-)
     glActiveTexture(GL_TEXTURE0); // Uset texture unit 0 throughout
+    glm::vec3 light;
     glm::vec3 up=glm::vec3(0,0,1);
     glm::vec3 camera=glm::vec3(0,-20.0,0);
-    glm::vec3 player=glm::vec3(level->player.x_m_8/8.0, level->player.y_m_8/8.0+ 0.0, level->player.z_m_8/8.0);
+    glm::vec3 player=glm::vec3(level->player.x_m_8/8.0, level->player.y_m_8/8.0, level->player.z_m_8/8.0);
     camera = glm::rotate( camera, glm::radians(head_yaw), glm::vec3(0,0,1) );
     camera = glm::rotate( camera, glm::radians(head_pitch), glm::vec3(1,0,0) );
     up     = glm::rotate( up, glm::radians(head_pitch), glm::vec3(1,0,0) );
+    light = player+(camera*0.5f);
     V = glm::lookAt(player+camera,
                     player,
                     up);
@@ -203,7 +205,7 @@ c_game_gl::draw_start(class c_game_level *level)
     glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&V[0][0]);
     glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&P[0][0]);
     glUniform1i(TextureID,0);
-    glUniform3f(LightPosID,16.0,-20.0,10.0);
+    glUniform3f(LightPosID,light[0],light[1],light[2]);
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);

@@ -12,7 +12,7 @@ public:
     ~c_hud(void);
     int init(void);
     void clear(void);
-    void draw_text(int x, int y, const char *text, SDL_Color c);
+    void draw_text(int x, int y, char *text, SDL_Color c);
     void display(void);
 
     int width;

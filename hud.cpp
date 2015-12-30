@@ -58,17 +58,26 @@ c_hud::clear(void)
 }
 
 void
-c_hud::draw_text(int x, int y, const char *text, SDL_Color c)
+c_hud::draw_text(int x, int y, char *text, SDL_Color c)
 {
     SDL_Surface *text_surface;
     SDL_Rect dest_rect; // only x and y are used
 
     if (!SDL.font) return;
-    // Write text to surface
-    text_surface = TTF_RenderText_Solid(SDL.font,text,c);
     dest_rect.x = x;
     dest_rect.y = y;
-    SDL_BlitSurface(text_surface, NULL, SDL.surface, &dest_rect);
+    do {
+        char *next_text;
+        next_text = strchr(text,'\n');
+        if (next_text != NULL) {
+            next_text[0] = 0;
+            next_text++;
+        }
+        text_surface = TTF_RenderText_Solid(SDL.font,text,c);
+        SDL_BlitSurface(text_surface, NULL, SDL.surface, &dest_rect);
+        dest_rect.y += 16;
+        text = next_text;
+    } while (text != NULL);
 }
 
 void
