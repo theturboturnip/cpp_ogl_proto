@@ -19,7 +19,7 @@ void main(){
      vec3 MaterialAmbientColor=AmbientColor*AmbientPower*MaterialDiffuseColor;
      vec3 MaterialSpecularColor=LightColor*0.3;
 
-     float distance=length(LightPosition_worldspace-Position_worldspace);
+     float distance=length(LightPosition_worldspace-Position_worldspace)/8.0;
 
      vec3 normal=normalize(Normal_cameraspace);
      vec3 lightDirection=normalize(LightDirection_cameraspace);

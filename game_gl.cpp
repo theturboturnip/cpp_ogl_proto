@@ -19,7 +19,7 @@ class c_mesh
 public:
     c_mesh(void);
     ~c_mesh();
-    int load_obj(const char *obj_file, float scale);
+    int load_obj(struct game_gl_mesh *mesh);
     int num_triangles;
     GLuint attrib_buffers[3];
 };
@@ -62,7 +62,8 @@ c_texture::load_png(const char *png_filename)
 struct game_gl_mesh {
     const char *obj_filename;
     int        mesh_id;
-    float      scale;
+    glm::mat3  transform;
+    glm::vec3  translation;
 };
 
 struct game_gl_texture {
@@ -72,8 +73,9 @@ struct game_gl_texture {
 
 static struct game_gl_mesh meshes_to_load[] =
 {
-    {"cube.obj",   1, 5.0},
-    {"monkey.obj", 2, 1.0},
+    {"cube.obj",   1, glm::mat3(5.0), glm::vec3(0,0,0)},
+    {"monkey.obj", 2, glm::mat3(1.0), glm::vec3(0,0,0)},
+    {"miner.obj",  3, glm::mat3(0.5), glm::vec3(0,0,-0.25)},
     {NULL, -1},
 };
 
@@ -89,9 +91,9 @@ static struct game_gl_texture textures_to_load[] =
 };
 
 int
-c_mesh::load_obj(const char *obj_file, float scale)
+c_mesh::load_obj(struct game_gl_mesh *mesh)
 {
-    num_triangles = LoadModelFromFile(obj_file, attrib_buffers, scale);
+    num_triangles = LoadModelFromFile(mesh->obj_filename, attrib_buffers, &mesh->transform, &mesh->translation);
     if (num_triangles==0) {
         fprintf(stderr, "Failed to load tetra\n");
         return 0;
@@ -112,9 +114,6 @@ glm::mat4 c_game_gl::FindProjectionMatrix(float zNearClip,float zFarClip)
 
 glm::mat4 c_game_gl::FindViewMatrix(void)
 {
-    return glm::lookAt(glm::vec3(body_pos[0],body_pos[1]-20.0,body_pos[2]),
-                       glm::vec3(body_pos[0],body_pos[1]+0.0,body_pos[2]),
-                       glm::vec3(0,0,1)); // Z is up
     // direction facting is (body_facing rotated by yaw around Z) rotated by pitch around X
     glm::vec3 eye_direction;
     eye_direction = glm::rotate( body_facing, glm::radians(head_yaw), glm::vec3(0,0,1) );
@@ -150,7 +149,7 @@ c_game_gl::init(void)
         j = meshes_to_load[i].mesh_id;
         if (j < GAME_GL_MAX_MESH) {
             meshes[j] = new c_mesh();
-            if (meshes[j]->load_obj(meshes_to_load[i].obj_filename, meshes_to_load[i].scale) == 0) {
+            if (meshes[j]->load_obj(&meshes_to_load[i]) == 0) {
                 meshes[j] = NULL;
             }
         }
@@ -184,19 +183,27 @@ c_game_gl::init(void)
 }
 
 void
-c_game_gl::draw_start(void)
+c_game_gl::draw_start(class c_game_level *level)
 {
     glUseProgram(ShaderProgramID);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 //glCullFace(GL_FRONT); // You can try this to cull front faces for fun :-)
     glActiveTexture(GL_TEXTURE0); // Uset texture unit 0 throughout
-    V = FindViewMatrix();
+    glm::vec3 up=glm::vec3(0,0,1);
+    glm::vec3 camera=glm::vec3(0,-20.0,0);
+    glm::vec3 player=glm::vec3(level->player.x_m_8/8.0, level->player.y_m_8/8.0+ 0.0, level->player.z_m_8/8.0);
+    camera = glm::rotate( camera, glm::radians(head_yaw), glm::vec3(0,0,1) );
+    camera = glm::rotate( camera, glm::radians(head_pitch), glm::vec3(1,0,0) );
+    up     = glm::rotate( up, glm::radians(head_pitch), glm::vec3(1,0,0) );
+    V = glm::lookAt(player+camera,
+                    player,
+                    up);
     P = FindProjectionMatrix(0.1f,100.0f);
     glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&V[0][0]);
     glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&P[0][0]);
     glUniform1i(TextureID,0);
-    glUniform3f(LightPosID,4.0,3.0,3.0);
+    glUniform3f(LightPosID,16.0,-20.0,10.0);
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -212,7 +219,7 @@ c_game_gl::draw_complete(void)
 }
 
 void
-c_game_gl::draw_cube(float x, float y, float z, int mesh, int texture)
+c_game_gl::draw_mesh(float x, float y, float z, int mesh, int texture)
 {
     if ((mesh<0) || (mesh>=GAME_GL_MAX_MESH)) return;
     if ((texture<0) || (texture>=GAME_GL_MAX_TEXTURES)) return;
@@ -243,16 +250,17 @@ c_game_gl::draw(class c_game_level *level)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (level->cubes == NULL) return;
-    draw_start();
+    draw_start(level);
     for (x=0; x<level->dimensions[0]; x++) {
         for (y=0; y<level->dimensions[1]; y++) {
             for (z=0; z<level->dimensions[2]; z++) {
                 cube = *(level->cube_of_pos(x,y,z));
                 if (cube!=0) {
-                    draw_cube(x,y,z,cube>>8,cube&0xff);
+                    draw_mesh(x,y,z,cube>>8,cube&0xff);
                 }
             }
         }
     }
+    draw_mesh(level->player.x_m_8/8.0, level->player.y_m_8/8.0, level->player.z_m_8/8.0,3,4);
     draw_complete();
 }

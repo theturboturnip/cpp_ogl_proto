@@ -16,7 +16,7 @@
 
 #define NUM_KEYS 20
 static int keys[NUM_KEYS] = {
-SDLK_d, SDLK_a,
+SDLK_a, SDLK_d,
 SDLK_x, SDLK_z,
 SDLK_s, SDLK_w,
 SDLK_r, SDLK_q,
@@ -176,13 +176,13 @@ c_main::MainLoop(void)
             }
         }
     }
-    if (keys_down[0]) { game_gl->body_pos[0]-=0.1; }
-    if (keys_down[1]) { game_gl->body_pos[0]+=0.1; }
-    if (keys_down[2]) { game_gl->body_pos[1]-=0.1; }
-    if (keys_down[3]) { game_gl->body_pos[1]+=0.1; }
-    if (keys_down[4]) { game_gl->body_pos[2]-=0.1; }
-    if (keys_down[5]) { game_gl->body_pos[2]+=0.1; }
-    if (keys_down[6]) { game_gl->body_pos[0]=4.0; game_gl->body_pos[1]=3.0; game_gl->body_pos[2]=3.0; }
+    if (keys_down[0]) { level->player.x_m_8-=1; }
+    if (keys_down[1]) { level->player.x_m_8+=1; }
+    if (keys_down[2]) { level->player.y_m_8-=1; }
+    if (keys_down[3]) { level->player.y_m_8+=1; }
+    if (keys_down[4]) { level->player.z_m_8-=1; }
+    if (keys_down[5]) { level->player.z_m_8+=1; }
+    if (keys_down[6]) { level->player.x_m_8=5*8; level->player.y_m_8=0*8; level->player.z_m_8=3*8; }
     if (keys_down[7]) { shouldEnd = true; }
     if (keys_down[8]) { game_gl->FOV -= 1; }
     if (keys_down[9]) { game_gl->FOV += 1; }

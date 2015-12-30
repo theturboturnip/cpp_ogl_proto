@@ -18,6 +18,7 @@ GLuint LoadShaderFromFile(string pathString,GLenum shaderType);
 GLuint LoadShadersIntoProgram(string vertexPath,string fragPath,GLuint program=0);
 GLuint LoadTextureFromFile(string imagePath, GLuint imageType);
 int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale=1.0);
+int LoadModelFromFile(string modelPath, GLuint buffers[3], glm::mat3 *transform=NULL, glm::vec3 *translation=NULL);
 
 #endif // __INC_LOADER_H__
 

@@ -164,7 +164,8 @@ Model Loading
 
 */
 
-int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale){
+int LoadModelFromFile(string modelPath, GLuint buffers[3], glm::mat3 *transform, glm::vec3 *translation)
+{
   //Assume model is a .obj
   fprintf(stderr, "Attempting model load from %s...",modelPath.c_str());
   FILE* modelFile=fopen(modelPath.c_str(),"r");
@@ -176,6 +177,7 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale){
   vector<glm::vec2> uvs;
   vector< unsigned int > vertexIndices, uvIndices, normalIndices;
   int line=0;
+  int i;
   while (1){
     //Find first word of line
     char lineHeader[128];
@@ -198,9 +200,6 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale){
       //Process vertex
       glm::vec3 vertex;
       fscanf(modelFile,"%f %f %f\n",&vertex.x,&vertex.y,&vertex.z);
-      vertex.x *= scale;
-      vertex.y *= scale;
-      vertex.z *= scale;
       verts.push_back(vertex);
     }else if(strcmp(lineHeader,"f")==0){
       //Process face
@@ -228,8 +227,22 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale){
     line++;
     //Done processing, loop back
   }
+  //Transform verticies
+  for(i=0; i<verts.size();i++){
+      if (transform) {
+          verts[i] = (*transform) * verts[i];
+      }
+      if (translation) {
+          verts[i] = verts[i] + (*translation);
+      }
+  }
+  for(i=0; i<normals.size();i++){
+      if (transform) {
+          normals[i] = (*transform) * normals[i];
+      }
+  }
   //Organize data into OpenGL compatible format
-  unsigned int vertexIndicesLength=vertexIndices.size(),i;
+  unsigned int vertexIndicesLength=vertexIndices.size();
   float organizedVerticies[vertexIndicesLength*3];
   float organizedNormals[vertexIndicesLength*3];
   float organizedUVs[vertexIndicesLength*3];
@@ -280,4 +293,10 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale){
 	       GL_STATIC_DRAW);
   fprintf(stderr, " Success\n");
   return vertexIndicesLength;
+}
+
+int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale){
+    glm::mat3 transform;
+    transform = glm::mat3(scale);
+    return LoadModelFromFile(modelPath, buffers, &transform, NULL);
 }

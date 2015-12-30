@@ -9,6 +9,9 @@ c_game_level::c_game_level(void)
     dimensions[1] = 20;
     dimensions[2] = 20;
     cubes = NULL;
+    player.x_m_8 = 5*8;
+    player.y_m_8 = 0*8;
+    player.z_m_8 = 3*8;
 }
 
 void
