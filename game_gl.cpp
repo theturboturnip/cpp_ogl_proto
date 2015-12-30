@@ -73,7 +73,11 @@ struct game_gl_texture {
 
 static struct game_gl_mesh meshes_to_load[] =
 {
-    {"cube.obj",   1, glm::mat3(5.0), glm::vec3(0,0,0)},
+    {"cube.obj",   1, glm::mat3(0.5), glm::vec3(0,0,0)},
+/*    {"cube.obj",   1, glm::mat3(glm::vec3(0.5,0.0,0.0),
+                                glm::vec3(0.0,0.0,-0.5),
+                                glm::vec3(0.0,0.5,0.0)
+                                ), glm::vec3(0,0,0)},*/
     {"monkey.obj", 2, glm::mat3(1.0), glm::vec3(0,0,0)},
     {"miner.obj",  3, glm::mat3(0.5), glm::vec3(0,0,-0.25)},
     {NULL, -1},

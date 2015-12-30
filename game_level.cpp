@@ -174,7 +174,7 @@ c_game_level::load_from_file(const char *level_filename)
         fprintf(stderr, "Char '%c' is mesh %d texture %d cube %d\n", new_mapping->ch, new_mapping->mesh, new_mapping->texture, new_mapping->cube );
     }
 
-    for (z=0; z<dimensions[2]; z++) {
+    for (z=dimensions[2]-1; z>=0; z--) {
         int y;
         if (!skip_separator(level_filename, level_file)) return 0;
         for (y=0; y<dimensions[1]; y++) {

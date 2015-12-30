@@ -95,7 +95,7 @@ int c_main::Init(void)
     checkSDLError();
 
     level = new c_game_level();
-    if (level->load_from_file("levels/manic_miner_1.lvl")==0) {
+    if (level->load_from_file("levels/manic_miner_plus.lvl")==0) {
         return 0;
     }
 

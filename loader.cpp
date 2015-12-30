@@ -188,7 +188,7 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3], glm::mat3 *transform,
       //Process UV
       glm::vec2 uv;
       fscanf(modelFile,"%f %f\n",&uv.x,&uv.y);
-      //uv.y=(2+uv.y)/4;
+      uv.y=1-uv.y;//(2+uv.y)/4;
       //uv.x=(2+uv.x)/4;
       uvs.push_back(uv);
     }else if(strcmp(lineHeader,"vn")==0){
