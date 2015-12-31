@@ -1,4 +1,9 @@
 typedef unsigned int t_level_cube;
+#define TLC_IS_NOT_AIR         (1<<16)
+#define TLC_IS_BRICK           (2<<16)
+#define TLC_IS_LEFT_CONVEYOR   (4<<16)
+#define TLC_IS_RIGHT_CONVEYOR  (8<<16)
+
 typedef struct {
     int x_m_8;
     int y_m_8;
@@ -17,6 +22,7 @@ public:
     void tick(void);
     int load_from_file(const char *level_filename);
     void display(char *buffer, int size);
+    int is_air_below(int x, int z);
     inline int bound_dimension(int pos, int d) {
         if (!cubes) return 0;
         if (pos<0) return 0;

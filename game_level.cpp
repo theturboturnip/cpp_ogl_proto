@@ -156,12 +156,23 @@ c_game_level::load_from_file(const char *level_filename)
     while (!is_separator(level_file)) {
         char ch;
         int mesh, texture;
+        int things, flags;
+        char flag_string[64];
         struct file_char_map *new_mapping;
 
         skip_whitespace(level_file);
-        if (fscanf(level_file,"%c%d.%d\n",&ch,&mesh,&texture)!=3) {
-            load_error(level_filename, level_file, "Trying to load <ch><mesh>.<texture>");
+        things = fscanf(level_file,"%c%d.%d.%s\n",&ch,&mesh,&texture,&flag_string[0]);
+        if (things<3) {
+            load_error(level_filename, level_file, "Trying to load <ch><mesh>.<texture>[.<flags>]");
             return 0;
+        }
+        flags = 0;
+        if (things==4) {
+            if (strchr(flag_string,'<')) flags |= TLC_IS_LEFT_CONVEYOR;
+            if (strchr(flag_string,'>')) flags |= TLC_IS_RIGHT_CONVEYOR;
+            if (strchr(flag_string,'@')) flags |= TLC_IS_BRICK;
+            if (strchr(flag_string,'!')) flags |= TLC_IS_NOT_AIR;
+            fprintf(stderr,"%s:%d\n",flag_string,flags);
         }
         new_mapping = (struct file_char_map *)malloc(sizeof(struct file_char_map));
         if (!new_mapping) {
@@ -173,7 +184,7 @@ c_game_level::load_from_file(const char *level_filename)
         new_mapping->ch = ch;
         new_mapping->mesh = mesh;
         new_mapping->texture = texture;
-        new_mapping->cube = (mesh<<8) | (texture<<0);
+        new_mapping->cube = flags | (mesh<<8) | (texture<<0);
         fprintf(stderr, "Char '%c' is mesh %d texture %d cube %d\n", new_mapping->ch, new_mapping->mesh, new_mapping->texture, new_mapping->cube );
     }
 
@@ -230,12 +241,24 @@ c_game_level::reset(int set_reset)
     }
     memcpy(cubes, reset_cubes, cubes_size);
     player = reset_player;
-    jump_state=0;
-    state=0;
-    delta_x=0;
-    delta_z=0;
-    subtick=0;
+    jump_state = 0;
+    state = 0;
+    delta_x = 0;
+    delta_z = 0;
+    subtick = 0;
 }
+
+int
+c_game_level::is_air_below(int x, int z)
+{
+    if (cube_of_pos((x)>>3,0,(z-1)>>3)[0] & TLC_IS_NOT_AIR) return 0;
+    if (cube_of_pos((x+8)>>3,0,(z-1)>>3)[0] & TLC_IS_NOT_AIR) return 0;
+    return 1;
+}
+
+static int jump_deltas[] = {
+    0,-4,-4,-2,-2,-2,-2,-1,-1,-1,-1, 0,0, 1,1,1,1,2,2,2,2,4,4
+};
 
 void
 c_game_level::tick(void)
@@ -244,72 +267,66 @@ c_game_level::tick(void)
     int new_x;
     jump_request = 0;
     subtick++;
-    if (subtick<2) return;
+    if (subtick < 2) return;
     subtick=0;
 
-    /*if (state!=2) {
-        if ((player.z_m_8 & 7)==0) {
-            if (cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]==0) {
-                delta_z = -GRAVITY;
-                state=1;//Falling
-            }
-            else if (jump_request) {
-                jump_state = 16;
-                state=2;//Jumping
-            }
-        } else {
-            delta_z = -GRAVITY;//Falling
-            state=1;
-        }
-        
-    } else {
-      delta_z = 1;
-      //if (jump_state>4) delta_z=1;
-      jump_state-=1;
-      if (jump_state==0){
-          
-      }*/
-    if(state==0){
-        if(cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]==0){
+    if (state==0) { /* Must be at 'cube top level' to be in state 0 (on ground) */
+        if (is_air_below(player.x_m_8, player.z_m_8)) {
             //Falling
             state=1;
         }
-        if (keys_down[0]) { delta_x = -MOVESPEED; }
-        else if (keys_down[1]) { delta_x = MOVESPEED; }
-        else {delta_x=0;}
+        if (keys_down[0]) {
+            delta_x = -MOVESPEED;
+            if (keys_down[1]) {
+                delta_x = 0;
+            }
+        }
+        else if (keys_down[1]) {
+            delta_x = MOVESPEED;
+        }
+        else { 
+            t_level_cube cube_below;
+            cube_below = cube_of_pos(player.x_m_8>>3,0,(player.z_m_8-1)>>3)[0];
+            delta_x=0;
+            if (cube_below & TLC_IS_LEFT_CONVEYOR)  delta_x=-1;
+            if (cube_below & TLC_IS_RIGHT_CONVEYOR) delta_x=1;
+        }
         if (keys_down[4]) {
             //Begin jump
-            jump_state=33;
-            state=2;
+            jump_state = sizeof(jump_deltas)/sizeof(int);
+            state = 2;
         }
         
-        if(state==1) delta_x=0;
+        if (state==1) delta_x=0;
     }
+
     new_x = player.x_m_8 + delta_x;    
-    if ((cube_of_pos((new_x)>>3,0,player.z_m_8>>3))[0]!=0) {
+    if ((cube_of_pos((new_x)>>3,0,player.z_m_8>>3))[0] & TLC_IS_BRICK) {
         if (delta_x<0) delta_x=0;
     }
-    if ((cube_of_pos((new_x+8)>>3,0,player.z_m_8>>3))[0]!=0) {
+    if ((cube_of_pos((new_x+8)>>3,0,player.z_m_8>>3))[0] & TLC_IS_BRICK) {
         if (delta_x>0) delta_x=0;
     }
-    player.x_m_8 += delta_x;
-    if (state==2){
-        delta_z=JUMPSPEED;
-        if(jump_state<17) delta_z=-GRAVITY;
-        jump_state-=1;
-        if(jump_state==0){
-            if(cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]==0){
-                //Falling
-                state=1;
-            }else state=0;//On ground
+    player.x_m_8 = player.x_m_8 + delta_x;
+
+    if (state==2){ /* Jumping */
+        delta_z = jump_deltas[jump_state-1];
+        jump_state--;
+        if (jump_state==0){
+            state=0; //Will be on ground next - except it may start falling then
+        }
+        if (delta_z<0) {
+            if (((player.z_m_8 &7)==0) &&!is_air_below(player.x_m_8, player.z_m_8)) {
+                state = 0;
+                delta_z = 0;
+            }
         }
     }
     
-    
-    if (state==1){
-        delta_z=-GRAVITY;
-        delta_x=0;
-        if(cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]!=0){
+    if (state==1){ /* Falling */
+        delta_z = -GRAVITY;
+        delta_x = 0;
+        if (((player.z_m_8 &7)==0) && !is_air_below(player.x_m_8, player.z_m_8)) {
             state=0;//On ground
             delta_z=0;
         }
@@ -322,8 +339,8 @@ c_game_level::tick(void)
 void
 c_game_level::display(char *buffer, int size)
 {
-    snprintf(buffer, size, "Player pos %d.%d , %d.%d\nJump_State %d\ndelta_x %d",
+    snprintf(buffer, size, "Player pos %d.%d , %d.%d\nState %d delta_x/z %d/%d",
              player.x_m_8>>3, player.x_m_8&7,
              player.z_m_8>>3, player.z_m_8&7,
-             jump_state, delta_x);
+             state, delta_x, delta_z);
 }
