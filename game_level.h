@@ -31,7 +31,7 @@ public:
     int *keys_down;
     t_level_cube *cubes;
     t_level_position player;
-    int jumping;
+    int jump_state,state,delta_x,delta_z,subtick;
 
     t_level_cube     *reset_cubes;
     t_level_position reset_player;

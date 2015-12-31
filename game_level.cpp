@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#define MOVESPEED 2
+#define GRAVITY 2
+#define JUMPSPEED 2
 
 c_game_level::c_game_level(void)
 {
@@ -227,21 +230,62 @@ c_game_level::reset(int set_reset)
     }
     memcpy(cubes, reset_cubes, cubes_size);
     player = reset_player;
-    jumping = 0;
+    jump_state=0;
+    state=0;
+    delta_x=0;
+    delta_z=0;
+    subtick=0;
 }
 
 void
 c_game_level::tick(void)
 {
-    int delta_x, delta_z, jump_request;
+    int jump_request;
     int new_x;
-    delta_x = 0;
-    delta_z = 0;
     jump_request = 0;
-    if (keys_down[0]) { delta_x = -2; }
-    if (keys_down[1]) { delta_x = 2; }
-    if (keys_down[4]) { jump_request = 1; }
-    new_x = player.x_m_8 + delta_x;
+    subtick++;
+    if (subtick<2) return;
+    subtick=0;
+
+    /*if (state!=2) {
+        if ((player.z_m_8 & 7)==0) {
+            if (cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]==0) {
+                delta_z = -GRAVITY;
+                state=1;//Falling
+            }
+            else if (jump_request) {
+                jump_state = 16;
+                state=2;//Jumping
+            }
+        } else {
+            delta_z = -GRAVITY;//Falling
+            state=1;
+        }
+        
+    } else {
+      delta_z = 1;
+      //if (jump_state>4) delta_z=1;
+      jump_state-=1;
+      if (jump_state==0){
+          
+      }*/
+    if(state==0){
+        if(cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]==0){
+            //Falling
+            state=1;
+        }
+        if (keys_down[0]) { delta_x = -MOVESPEED; }
+        else if (keys_down[1]) { delta_x = MOVESPEED; }
+        else {delta_x=0;}
+        if (keys_down[4]) {
+            //Begin jump
+            jump_state=33;
+            state=2;
+        }
+        
+        if(state==1) delta_x=0;
+    }
+    new_x = player.x_m_8 + delta_x;    
     if ((cube_of_pos((new_x)>>3,0,player.z_m_8>>3))[0]!=0) {
         if (delta_x<0) delta_x=0;
     }
@@ -249,31 +293,37 @@ c_game_level::tick(void)
         if (delta_x>0) delta_x=0;
     }
     player.x_m_8 += delta_x;
-    if (jumping==0) {
-        if ((player.z_m_8 & 7)==0) {
-            if (cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]==0) {
-                delta_z = -1;
-            }
-            else if (jump_request) {
-                jumping = 16;
-            }
-        } else {
-            delta_z = -1;
+    if (state==2){
+        delta_z=JUMPSPEED;
+        if(jump_state<17) delta_z=-GRAVITY;
+        jump_state-=1;
+        if(jump_state==0){
+            if(cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]==0){
+                //Falling
+                state=1;
+            }else state=0;//On ground
         }
-    } else {
-        delta_z = 1;
-        if (jumping>4) delta_z=1;
-        jumping-=1;
+    }
+    
+    
+    if (state==1){
+        delta_z=-GRAVITY;
+        delta_x=0;
+        if(cube_of_pos((player.x_m_8+4)>>3,0,(player.z_m_8-1)>>3)[0]!=0){
+            state=0;//On ground
+            delta_z=0;
+        }
     }
     player.z_m_8 += delta_z;
+    if (player.z_m_8<0) player.z_m_8=1; 
     if (keys_down[6]) { reset(); }
 }
 
 void
 c_game_level::display(char *buffer, int size)
 {
-    snprintf(buffer, size, "Player pos %d.%d , %d.%d\nJumping %d",
+    snprintf(buffer, size, "Player pos %d.%d , %d.%d\nJump_State %d\ndelta_x %d",
              player.x_m_8>>3, player.x_m_8&7,
              player.z_m_8>>3, player.z_m_8&7,
-             jumping);
+             jump_state, delta_x);
 }
