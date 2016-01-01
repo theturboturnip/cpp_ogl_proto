@@ -262,7 +262,7 @@ c_game_gl::draw(class c_game_level *level)
             for (z=0; z<level->dimensions[2]; z++) {
                 cube = *(level->cube_of_pos(x,y,z));
                 if (cube!=0) {
-                    draw_mesh(x,y,z,cube>>8,cube&0xff);
+                    draw_mesh(x,y,z,(cube>>8)&0xff,cube&0xff);
                 }
             }
         }
