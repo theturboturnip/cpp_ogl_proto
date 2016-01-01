@@ -10,34 +10,16 @@
 #include <cstdlib>
 #include "loader.h"
 #include "mesh.h"
+#include "Engine/window.h"
 
-int SCREEN_WIDTH=640,SCREEN_HEIGHT=480;
-float FOV=45;
-SDL_Window* window=NULL;
-SDL_GLContext glContext;
+class GameWindow *window=NULL;
 bool shouldEnd=false;
 SDL_Event e;
 glm::mat4 V,P;
 GLuint ShaderProgramID,MatrixID,TextureID,RockTexture,Rock2Texture;
 Mesh *m;
 
-void checkSDLError(void)
-{
-	const char *error = SDL_GetError();
-	if (*error != '\0')
-	{
-		fprintf(stderr,"SDL Error: %s\n", error);
-		SDL_ClearError();
-	}
-	GLuint GLError=glGetError();
-	if (GLError!=0)
-	  fprintf(stderr,"OpenGL Error: %d\n",GLError);
-}
 
-glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip){
-  float FOVrads=glm::radians(FOV),aspect=(float)SCREEN_WIDTH/(float)SCREEN_HEIGHT;
-  return glm::perspective(FOVrads,aspect,zNearClip,zFarClip);
-}
 
 glm::mat4 FindViewMatrix(){
   return glm::lookAt(glm::vec3(4,4,3),
@@ -48,11 +30,7 @@ glm::mat4 FindModelMatrix(){
   return glm::mat4(1.0f);
 }
 
-void ThrowSDLError(void){
-  std::cout << "SDL Error Encountered: "<<SDL_GetError() << "\n";
-}
-
-int CreateWindow(void){
+/*int CreateWindow(void){
   int major, minor;
 
    if (SDL_Init(SDL_INIT_EVERYTHING)!= 0){
@@ -89,14 +67,10 @@ int CreateWindow(void){
   fprintf(stderr, "Using OpenGL version %d.%d\n",major,minor);
 
   return 0;
-}
+  }*/
 
 int InitScene(void){
-  glClearColor(0.0f,0.0f,0.4f,0.0f);
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS);
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
+  window->SetClearColor(0.0f,0.0f,0.4f,0.0f);
   
   /*GLfloat g_vertex_buffer_data[] = {
     -1.0f,-1.0f,0.0f,
@@ -105,9 +79,9 @@ int InitScene(void){
   glGenBuffers(1,&VertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER,VertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);*/
-  m=new Mesh(new Transform(),"monkey.obj");
+  m=new Mesh(new Transform(),"monkey.obj","rock.png");
   ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","custom_fragment_shader.glsl");
-  glUseProgram(ShaderProgramID);
+  window->UseShaderProgram(ShaderProgramID);
   if(ShaderProgramID==0){
     fprintf(stderr,"Shader link failed\n");
     return 1;
@@ -115,18 +89,25 @@ int InitScene(void){
   //Getting MVP, giving to shader
   MatrixID=glGetUniformLocation(ShaderProgramID, "M");
   GLuint ViewMatID=glGetUniformLocation(ShaderProgramID, "V"),ProjectionMatID=glGetUniformLocation(ShaderProgramID, "P"),LightPosID=glGetUniformLocation(ShaderProgramID, "LightPosition_worldspace");
-  checkSDLError();
+  //checkSDLError();
   //VP =FindProjectionMatrix(0.1f,100.0f)*FindViewMatrix();
-  P=FindProjectionMatrix(0.1f,100.0f);
+  P=window->ProjectionMatrix;
   V=FindViewMatrix();
   glUniformMatrix4fv(ViewMatID,1,GL_FALSE,&V[0][0]);
   glUniformMatrix4fv(ProjectionMatID,1,GL_FALSE,&P[0][0]);
   glUniform3f(LightPosID,4.0f,3.0f,3.0f);
-  checkSDLError();
+
   TextureID=glGetUniformLocation(ShaderProgramID,"textureSampler");
-  LoadTextureFromFile("rock.png",RockTexture);
-  LoadTextureFromFile("rock2.png",Rock2Texture);
+  //LoadTextureFromFile("rock.png",RockTexture);
+  //LoadTextureFromFile("rock2.png",Rock2Texture);
   return 0;
+}
+
+int InitWindow(){
+    window=new GameWindow();
+    if (window==NULL)
+        return 1;
+    return 0;
 }
 
 void BindTexture(GLuint texture){
@@ -142,38 +123,27 @@ void BindTexture(GLuint texture){
  To draw, use a Draw() function
 */
 
-void EndSDL(void){
-  SDL_DestroyWindow(window);
-  SDL_Quit();
-  return;
-}
-
 void MainLoop(void){
   while (SDL_PollEvent(&e)!=0){
     if (e.type==SDL_QUIT)
       shouldEnd=true;
   }
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glUseProgram(ShaderProgramID);
-  BindTexture(RockTexture);
+  window->ClearWindow();
+  //glUseProgram(ShaderProgramID);
   m->Draw(MatrixID);
   m->transform->rotation.x+=0.1;
   //BindTexture(Rock2Texture,TextureID);
   //m->Draw(MatrixID);
   //m->transform->position.x=0.0;
-  SDL_GL_SwapWindow(window);
+  window->Flip();
 }
 
 int main(int argc,char *argv[]){
-  if (argc==3){
-    SCREEN_WIDTH=atoi(argv[1]);
-    SCREEN_HEIGHT=atoi(argv[2]);
-  }
-  if (CreateWindow()==1) return 1;
+  if (InitWindow()==1) return 1;
   if (InitScene()==1) return 1;
   while (!shouldEnd){
     MainLoop();
   }
-  EndSDL();
+  window->End();
   return 0;
 }

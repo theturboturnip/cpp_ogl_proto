@@ -15,7 +15,7 @@ LINKFLAGS = -iframework /Library/Frameworks -framework SDL2 -framework SDL2_imag
 CPPFLAGS  = -Wall -I$(GLM) -iframework /Library/Frameworks -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers
 endif
 
-OBJS = main.o loader.o mesh.o
+OBJS = main.o loader.o mesh.o Engine/window.o
 GAME_OBJS  = game_main.o loader.o game.o game_level.o game_gl.o hud.o
 
 prog: $(OBJS)

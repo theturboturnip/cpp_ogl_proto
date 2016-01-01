@@ -12,7 +12,7 @@ uniform sampler2D textureSampler;
 uniform vec3 LightPosition_worldspace;
 
 uniform vec3 LightColor=vec3(1,1,1),AmbientColor=vec3(1,1,1);
-uniform float LightPower=10.0f,AmbientPower=0.2f;
+uniform float LightPower=1.0f,AmbientPower=0.2f;
 
 void main(){
      vec3 MaterialDiffuseColor=texture(textureSampler, UV).rgb;
