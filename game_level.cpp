@@ -251,8 +251,8 @@ c_game_level::reset(int set_reset)
 int
 c_game_level::is_air_below(int x, int z)
 {
-    if (cube_of_pos((x)>>3,0,(z-1)>>3)[0] & TLC_IS_NOT_AIR) return 0;
-    if (cube_of_pos((x+8)>>3,0,(z-1)>>3)[0] & TLC_IS_NOT_AIR) return 0;
+    if (cube_of_pos((x+1)>>3,0,(z-1)>>3)[0] & TLC_IS_NOT_AIR) return 0;
+    if (cube_of_pos((x+7)>>3,0,(z-1)>>3)[0] & TLC_IS_NOT_AIR) return 0;
     return 1;
 }
 
@@ -271,10 +271,6 @@ c_game_level::tick(void)
     subtick=0;
 
     if (state==0) { /* Must be at 'cube top level' to be in state 0 (on ground) */
-        if (is_air_below(player.x_m_8, player.z_m_8)) {
-            //Falling
-            state=1;
-        }
         if (keys_down[0]) {
             delta_x = -MOVESPEED;
             if (keys_down[1]) {
@@ -295,6 +291,10 @@ c_game_level::tick(void)
             //Begin jump
             jump_state = sizeof(jump_deltas)/sizeof(int);
             state = 2;
+        }
+        if (is_air_below(player.x_m_8, player.z_m_8)) {
+            //Falling
+            state=1;
         }
         
         if (state==1) delta_x=0;

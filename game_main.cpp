@@ -14,7 +14,7 @@
 #include "game_gl.h"
 #include "game_level.h"
 
-#define NUM_KEYS 20
+#define NUM_KEYS 22
 static int keys[NUM_KEYS] = {
 SDLK_a, SDLK_d,
 SDLK_x, SDLK_z,
@@ -25,7 +25,8 @@ SDLK_m, SDLK_n,
 SDLK_i, SDLK_j,
 SDLK_f, SDLK_g,
 SDLK_h, SDLK_b,
-SDLK_1, SDLK_2
+SDLK_1, SDLK_2,
+SDLK_3, SDLK_4,
 };
 
 class c_main
@@ -151,6 +152,7 @@ c_main::CreateWindow(int width, int height)
     game_gl->head_yaw = 0;
     game_gl->head_pitch = 0;
     game_gl->FOV = 45;
+    game_gl->use_ortho_flat = 0;
     return game_gl->init();
 }
 
@@ -191,6 +193,8 @@ c_main::MainLoop(void)
     if (keys_down[17]) { game_gl->body_pos = game_gl->body_pos - game_gl->body_facing * 0.25f; }
     if (keys_down[18]) { hud_active = 1; }
     if (keys_down[19]) { hud_active = 0; }
+    if (keys_down[20]) { game_gl->use_ortho_flat = 1; }
+    if (keys_down[21]) { game_gl->use_ortho_flat = 0; }
     game_gl->head_yaw = 0.97*game_gl->head_yaw;
     game_gl->head_pitch = 0.97*game_gl->head_pitch;
 

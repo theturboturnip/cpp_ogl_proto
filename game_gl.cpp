@@ -49,6 +49,127 @@ c_texture::~c_texture()
 {
 }
 
+class c_shader
+{
+public:
+    c_shader(void);
+    ~c_shader();
+};
+
+class c_shader_game: public c_shader
+{
+public:    
+    c_shader_game(void);
+    int init(void);
+    void use(c_game_gl *level, glm::vec3 *light);
+    glm::mat4 M;
+    glm::mat4 V;
+    glm::mat4 P;
+    glm::mat4 MVP;
+    GLuint ShaderProgramID;
+    GLuint M_MatrixID;
+    GLuint V_MatrixID;
+    GLuint P_MatrixID;
+    GLuint TextureID;
+    GLuint VertexArrayID;
+    GLuint LightPosID;
+};
+
+class c_shader_ortho_flat: public c_shader
+{
+public:    
+    c_shader_ortho_flat(void);
+    int init(void);
+    void use(c_game_gl *level);
+    glm::mat4 M;
+    glm::mat4 V;
+    glm::mat4 P;
+    glm::mat4 MVP;
+    GLuint ShaderProgramID;
+    GLuint M_MatrixID;
+    GLuint V_MatrixID;
+    GLuint P_MatrixID;
+    GLuint TextureID;
+    GLuint VertexArrayID;
+};
+
+int
+c_shader_game::init(void)
+{
+    ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","custom_fragment_shader.glsl");
+    if (ShaderProgramID == 0) {
+        fprintf(stderr,"Shader load failed\n");
+        return 0;
+    }
+
+    LightPosID   = glGetUniformLocation(ShaderProgramID, "LightPosition_worldspace");
+    M_MatrixID   = glGetUniformLocation(ShaderProgramID, "M");
+    V_MatrixID   = glGetUniformLocation(ShaderProgramID, "V");
+    P_MatrixID   = glGetUniformLocation(ShaderProgramID, "P");
+
+    TextureID = glGetUniformLocation(ShaderProgramID,"textureSampler");
+    return 1;
+}
+
+int
+c_shader_ortho_flat::init(void)
+{
+    ShaderProgramID=LoadShadersIntoProgram("ortho_vertex_shader.glsl","flat_fragment_shader.glsl");
+    if (ShaderProgramID == 0) {
+        fprintf(stderr,"Shader load failed\n");
+        return 0;
+    }
+
+    M_MatrixID   = glGetUniformLocation(ShaderProgramID, "M");
+    V_MatrixID   = glGetUniformLocation(ShaderProgramID, "V");
+    P_MatrixID   = glGetUniformLocation(ShaderProgramID, "P");
+
+    TextureID = glGetUniformLocation(ShaderProgramID,"textureSampler");
+    return 1;
+}
+
+void
+c_shader_game::use(c_game_gl *level, glm::vec3 *light)
+{
+    glUseProgram(ShaderProgramID);
+    glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&level->V[0][0]);
+    glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&level->P[0][0]);
+    glUniform1i(TextureID,0);
+    glUniform3f(LightPosID,(*light)[0],(*light)[1],(*light)[2]);
+    level->M_MatrixID = M_MatrixID;
+}
+
+c_shader::c_shader(void)
+{
+}
+c_shader::~c_shader()
+{
+}
+c_shader_game::c_shader_game(void)
+{
+}
+c_shader_ortho_flat::c_shader_ortho_flat(void)
+{
+}
+
+void
+c_shader_ortho_flat::use(c_game_gl *level)
+{
+    glm::mat4 P;
+    glUseProgram(ShaderProgramID);
+    P = glm::mat4(0.0);
+    (&P[0][0])[0] = 5*0.0193f;
+    (&P[0][0])[5] = 5*0.0241f;
+    (&P[0][0])[10] = 2.0f/(0.1f-100.0f);
+    (&P[0][0])[11] = 0.0f;
+    (&P[0][0])[14] = (0.1f+100.0f)/(0.1f-100.0f);
+    (&P[0][0])[15] = 1.0f;
+    glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&level->V[0][0]);
+    glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&P[0][0]);
+    glUniform1i(TextureID,0);
+    level->M_MatrixID = M_MatrixID;
+}
+
 int
 c_texture::load_png(const char *png_filename)
 {
@@ -170,18 +291,13 @@ c_game_gl::init(void)
         }
     }
 
-    ShaderProgramID=LoadShadersIntoProgram("game_vertex_shader.glsl","custom_fragment_shader.glsl");
-    if (ShaderProgramID == 0) {
-        fprintf(stderr,"Shader load failed\n");
+    game_shader = new c_shader_game();
+    if (game_shader->init()==0)
         return 0;
-    }
-    //Getting MVP, giving to shader
-    LightPosID   = glGetUniformLocation(ShaderProgramID, "LightPosition_worldspace");
-    M_MatrixID   = glGetUniformLocation(ShaderProgramID, "M");
-    V_MatrixID   = glGetUniformLocation(ShaderProgramID, "V");
-    P_MatrixID   = glGetUniformLocation(ShaderProgramID, "P");
 
-    TextureID = glGetUniformLocation(ShaderProgramID,"textureSampler");
+    flat_shader = new c_shader_ortho_flat();
+    if (flat_shader->init()==0)
+        return 0;
 
     return 1;
 }
@@ -189,7 +305,6 @@ c_game_gl::init(void)
 void
 c_game_gl::draw_start(class c_game_level *level)
 {
-    glUseProgram(ShaderProgramID);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 //glCullFace(GL_FRONT); // You can try this to cull front faces for fun :-)
@@ -205,11 +320,12 @@ c_game_gl::draw_start(class c_game_level *level)
     V = glm::lookAt(player+camera,
                     player,
                     up);
-    P = FindProjectionMatrix(0.1f,100.0f);
-    glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&V[0][0]);
-    glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&P[0][0]);
-    glUniform1i(TextureID,0);
-    glUniform3f(LightPosID,light[0],light[1],light[2]);
+    if (use_ortho_flat) {
+        flat_shader->use(this);
+    } else {
+        P = FindProjectionMatrix(0.1f,100.0f);
+        game_shader->use(this, &light);
+    }
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);

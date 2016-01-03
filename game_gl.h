@@ -34,17 +34,15 @@ public:
     glm::mat4 V;
     glm::mat4 P;
     glm::mat4 MVP;
-    GLuint ShaderProgramID;
-    GLuint M_MatrixID;
-    GLuint V_MatrixID;
-    GLuint P_MatrixID;
-    GLuint MVP_MatrixID;
+    class c_shader_game *game_shader;
+    class c_shader_ortho_flat *flat_shader;
     GLuint TextureID;
     GLuint VertexArrayID;
-    GLuint LightPosID;
+    GLuint M_MatrixID;
 
     float FOV;
     float head_yaw, head_pitch;
+    int use_ortho_flat;
     glm::vec3 body_pos;
     glm::vec3 body_facing; // z is probably 0
 
