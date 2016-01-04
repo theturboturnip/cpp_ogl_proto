@@ -1,14 +1,13 @@
 #version 330 core 
 
 in vec2 UV;
-in vec3 Normal_cameraspace;
 
 out vec3 color;
 
 uniform sampler2D textureSampler;
 
-uniform vec3 LightColor=vec3(1,1,1),AmbientColor=vec3(1,1,1);
-uniform float LightPower=1.0f,AmbientPower=0.9f;
+uniform vec3 AmbientColor=vec3(1,1,1);
+uniform float AmbientPower=0.9f;
 
 void main(){
      vec3 MaterialDiffuseColor=texture(textureSampler, UV).rgb;
