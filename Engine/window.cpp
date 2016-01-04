@@ -30,20 +30,20 @@ GameWindow::GameWindow(int width,int height,float FOV,const char *name,bool resi
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    CheckError();
+    CheckError(1,0); /* Must not check GL errors until GL context is created */
     
     int flags=SDL_WINDOW_OPENGL;
     if(resizeable)
         flags=SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
     SCREEN=SDL_CreateWindow(name,SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,width,height,flags);
     if (SCREEN==NULL){
-        CheckError();
+        CheckError(1,0); /* Must not check GL errors until GL context is created */
         return;
     }
 
     GL_CONTEXT=SDL_GL_CreateContext(SCREEN);
     if (!GL_CONTEXT){
-        CheckError();
+        CheckError(1,0); /* Must not check GL errors until GL context is created */
         return;
     }
     

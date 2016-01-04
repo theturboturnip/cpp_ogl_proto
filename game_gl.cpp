@@ -61,17 +61,12 @@ class c_shader_game: public c_shader
 public:    
     c_shader_game(void);
     int init(void);
-    void use(c_game_gl *level, glm::vec3 *light);
-    glm::mat4 M;
-    glm::mat4 V;
-    glm::mat4 P;
-    glm::mat4 MVP;
+    GLuint use(c_game_gl *gl, glm::vec3 *light);
     GLuint ShaderProgramID;
     GLuint M_MatrixID;
     GLuint V_MatrixID;
     GLuint P_MatrixID;
     GLuint TextureID;
-    GLuint VertexArrayID;
     GLuint LightPosID;
 };
 
@@ -80,17 +75,12 @@ class c_shader_ortho_flat: public c_shader
 public:    
     c_shader_ortho_flat(void);
     int init(void);
-    void use(c_game_gl *level);
-    glm::mat4 M;
-    glm::mat4 V;
-    glm::mat4 P;
-    glm::mat4 MVP;
+    GLuint use(c_game_gl *gl);
     GLuint ShaderProgramID;
     GLuint M_MatrixID;
     GLuint V_MatrixID;
     GLuint P_MatrixID;
     GLuint TextureID;
-    GLuint VertexArrayID;
 };
 
 int
@@ -128,15 +118,20 @@ c_shader_ortho_flat::init(void)
     return 1;
 }
 
-void
-c_shader_game::use(c_game_gl *level, glm::vec3 *light)
+GLuint
+c_shader_game::use(c_game_gl *gl, glm::vec3 *light)
 {
+    glm::mat4 P;
+    P = glm::perspective(glm::radians(gl->FOV),
+                         gl->aspect_ratio,
+                         0.1f, /*zNearClip*/
+                         100.0f /*zFarClip*/);
     glUseProgram(ShaderProgramID);
-    glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&level->V[0][0]);
-    glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&level->P[0][0]);
+    glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&gl->V[0][0]);
+    glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&P[0][0]);
     glUniform1i(TextureID,0);
     glUniform3f(LightPosID,(*light)[0],(*light)[1],(*light)[2]);
-    level->M_MatrixID = M_MatrixID;
+    return M_MatrixID;
 }
 
 c_shader::c_shader(void)
@@ -152,8 +147,8 @@ c_shader_ortho_flat::c_shader_ortho_flat(void)
 {
 }
 
-void
-c_shader_ortho_flat::use(c_game_gl *level)
+GLuint
+c_shader_ortho_flat::use(c_game_gl *gl)
 {
     glm::mat4 P;
     glUseProgram(ShaderProgramID);
@@ -164,10 +159,10 @@ c_shader_ortho_flat::use(c_game_gl *level)
     (&P[0][0])[11] = 0.0f;
     (&P[0][0])[14] = (0.1f+100.0f)/(0.1f-100.0f);
     (&P[0][0])[15] = 1.0f;
-    glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&level->V[0][0]);
+    glUniformMatrix4fv(V_MatrixID,  1,GL_FALSE,&gl->V[0][0]);
     glUniformMatrix4fv(P_MatrixID,  1,GL_FALSE,&P[0][0]);
     glUniform1i(TextureID,0);
-    level->M_MatrixID = M_MatrixID;
+    return M_MatrixID;
 }
 
 int
@@ -195,10 +190,6 @@ struct game_gl_texture {
 static struct game_gl_mesh meshes_to_load[] =
 {
     {"cube.obj",   1, glm::mat3(0.5), glm::vec3(0,0,0)},
-/*    {"cube.obj",   1, glm::mat3(glm::vec3(0.5,0.0,0.0),
-                                glm::vec3(0.0,0.0,-0.5),
-                                glm::vec3(0.0,0.5,0.0)
-                                ), glm::vec3(0,0,0)},*/
     {"monkey.obj", 2, glm::mat3(1.0), glm::vec3(0,0,0)},
     {"miner.obj",  3, glm::mat3(0.5), glm::vec3(0,0,-0.25)},
     {NULL, -1},
@@ -229,33 +220,6 @@ c_mesh::load_obj(struct game_gl_mesh *mesh)
 c_game_gl::c_game_gl(int width, int height)
 {
     aspect_ratio = (float)width / height;
-}
-
-glm::mat4 c_game_gl::FindProjectionMatrix(float zNearClip,float zFarClip)
-{
-    float FOVrads=glm::radians(FOV),aspect=aspect_ratio;
-    return glm::perspective(FOVrads,aspect,zNearClip,zFarClip);
-}
-
-glm::mat4 c_game_gl::FindViewMatrix(void)
-{
-    // direction facting is (body_facing rotated by yaw around Z) rotated by pitch around X
-    glm::vec3 eye_direction;
-    eye_direction = glm::rotate( body_facing, glm::radians(head_yaw), glm::vec3(0,0,1) );
-    eye_direction = glm::rotate( eye_direction, glm::radians(head_pitch), glm::vec3(1,0,0) );
-    return glm::lookAt(body_pos,
-                       body_pos + eye_direction,
-                       glm::vec3(0,0,1)); // Z is up
-}
-
-glm::mat4 c_game_gl::FindModelMatrix(float x, float y,float z, float scale){
-    glm::mat4 a;
-    a = glm::mat4(scale);
-    a[3][0] = x;
-    a[3][1] = y;
-    a[3][2] = z;
-    a[3][3] = 1.0;//.00.1;
-    return a;//glm::mat4(12.0f);
 }
 
 int 
@@ -307,24 +271,24 @@ c_game_gl::draw_start(class c_game_level *level)
 {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-//glCullFace(GL_FRONT); // You can try this to cull front faces for fun :-)
     glActiveTexture(GL_TEXTURE0); // Uset texture unit 0 throughout
-    glm::vec3 light;
+
     glm::vec3 up=glm::vec3(0,0,1);
     glm::vec3 camera=glm::vec3(0,-20.0,0);
     glm::vec3 player=glm::vec3(level->player.x_m_8/8.0, level->player.y_m_8/8.0, level->player.z_m_8/8.0);
     camera = glm::rotate( camera, glm::radians(head_yaw), glm::vec3(0,0,1) );
     camera = glm::rotate( camera, glm::radians(head_pitch), glm::vec3(1,0,0) );
     up     = glm::rotate( up, glm::radians(head_pitch), glm::vec3(1,0,0) );
-    light = player+(camera*0.5f);
     V = glm::lookAt(player+camera,
                     player,
                     up);
+
     if (use_ortho_flat) {
-        flat_shader->use(this);
+        M_MatrixID = flat_shader->use(this);
     } else {
-        P = FindProjectionMatrix(0.1f,100.0f);
-        game_shader->use(this, &light);
+        glm::vec3 light;
+        light = player+(camera*0.25f);
+        M_MatrixID = game_shader->use(this, &light);
     }
 
     glEnableVertexAttribArray(0);
@@ -343,13 +307,18 @@ c_game_gl::draw_complete(void)
 void
 c_game_gl::draw_mesh(float x, float y, float z, int mesh, int texture)
 {
+    glm::mat4 M;
     if ((mesh<0) || (mesh>=GAME_GL_MAX_MESH)) return;
     if ((texture<0) || (texture>=GAME_GL_MAX_TEXTURES)) return;
 
     if (meshes[mesh] == NULL) return;
     if (textures[texture] == NULL) return;
 
-    M = FindModelMatrix(x,y,z,1);
+    M = glm::mat4(1.0f); // scale);
+    M[3][0] = x;
+    M[3][1] = y;
+    M[3][2] = z;
+    M[3][3] = 1.0;
     glUniformMatrix4fv(M_MatrixID,  1,GL_FALSE,&M[0][0]);
 
     glBindTexture(GL_TEXTURE_2D, textures[texture]->texture);

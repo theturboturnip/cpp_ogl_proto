@@ -21,22 +21,15 @@ public:
     c_game_gl(int width, int height);
     ~c_game_gl();
     int init(void);
-    glm::mat4 FindProjectionMatrix(float zNearClip,float zFarClip);
-    glm::mat4 FindViewMatrix(void);
-    glm::mat4 FindModelMatrix(float x, float y, float z, float scale);
     void draw(class c_game_level *level);
     void draw_start(class c_game_level *level);
     void draw_mesh(float x, float y, float z, int mesh, int texture);
     void draw_complete(void);
 
     float aspect_ratio;
-    glm::mat4 M;
     glm::mat4 V;
-    glm::mat4 P;
-    glm::mat4 MVP;
     class c_shader_game *game_shader;
     class c_shader_ortho_flat *flat_shader;
-    GLuint TextureID;
     GLuint VertexArrayID;
     GLuint M_MatrixID;
 

@@ -51,8 +51,10 @@ public:
     c_game_level *level;
 
     int hud_active;
-    int prev_time_out;
-    int last_time_out;
+    struct {
+        int last_time_loop_end;
+        int prev_time_loop_end;
+    } fps_calc;
 };
 
 c_main::c_main(int screen_width, int screen_height)
@@ -161,8 +163,6 @@ c_main::MainLoop(void)
 {
     int i;
     SDL_Event e;
-    int time_in;
-    time_in = SDL_GetTicks();
 
     while (SDL_PollEvent(&e)!=0){
         if (e.type==SDL_QUIT)
@@ -202,12 +202,13 @@ c_main::MainLoop(void)
 
     if (hud_active) {
         char text[1024];
-        int time_now;
-        time_now = SDL_GetTicks();
+        int frame_time;
+
+        frame_time = fps_calc.last_time_loop_end - fps_calc.prev_time_loop_end;
 
         hud->clear();
         SDL_Color a={255, 255, 255};
-        sprintf(text, "%5dfps time %dms", 1000/(last_time_out-prev_time_out), (last_time_out - prev_time_out));
+        sprintf(text, "%5dfps time %dms", 1000/frame_time, frame_time);
         hud->draw_text(100,100,text,a);
         level->display(text,sizeof(text));
         hud->draw_text(100,200,text,a);
@@ -215,9 +216,8 @@ c_main::MainLoop(void)
     }
 
     SDL_GL_SwapWindow(window);
-    prev_time_out = last_time_out;
-    last_time_out = SDL_GetTicks();
-
+    fps_calc.prev_time_loop_end = fps_calc.last_time_loop_end;
+    fps_calc.last_time_loop_end = SDL_GetTicks();
 }
 
 void
