@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+
 #define MOVESPEED 2
 #define GRAVITY 2
 #define JUMPSPEED 2

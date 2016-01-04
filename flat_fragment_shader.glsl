@@ -1,7 +1,6 @@
 #version 330 core 
 
 in vec2 UV;
-in vec3 Normal_cameraspace;
 
 out vec3 color;
 
