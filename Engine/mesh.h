@@ -1,11 +1,7 @@
 #ifndef __INC_MESH_H__
 #define __INC_MESH_H__
 
-#define GLM_FORCE_RADIANS
-#define GL_GLEXT_PROTOTYPES
-#include <glm/gtc/matrix_transform.hpp> 
-#include <glm/gtx/transform.hpp>
-#include <SDL2/SDL_opengl.h>
+#include "includes.h"
 #include "loader.h"
 
 class Transform{

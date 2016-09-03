@@ -1,15 +1,8 @@
-#define GL_GLEXT_PROTOTYPES
-#define GLM_FORCE_RADIANS
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <glm/gtc/matrix_transform.hpp> 
-#include <glm/gtx/transform.hpp>
+#include "includes.h"
 
 #include "window.h"
 
-GameWindow::GameWindow(int width,int height,float FOV,const char *name,bool resizeable,bool zBuffer,bool cullBackFaces, bool verbose){
+GameWindow::GameWindow(int width,int height,const char *name,bool resizeable, bool verbose){
     IS_ATTEMPTING=false;
     VERBOSE=verbose;
     //Create SDL Window
@@ -59,10 +52,10 @@ GameWindow::GameWindow(int width,int height,float FOV,const char *name,bool resi
 
     if (verbose) StartAttempt("set up OpenGL");
     glClearColor(0.0f,0.0f,0.4f,0.0f);
-    SetZBuffer(zBuffer);
+    /*SetZBuffer(zBuffer);
     SetBackFaceCull(cullBackFaces);
     SCREEN_FOV=FOV;
-    ProjectionMatrix=CalculateProjectionMatrix();
+    ProjectionMatrix=CalculateProjectionMatrix();*/
     CheckError();
     if (verbose) EndAttempt();
 }
@@ -99,14 +92,14 @@ void GameWindow::CheckError(bool checkSDL,bool checkGL){
     }
 }
 
-glm::mat4 GameWindow::CalculateProjectionMatrix(){
+/*glm::mat4 GameWindow::CalculateProjectionMatrix(){
     float FOVrads=glm::radians(SCREEN_FOV),aspect=(float)SCREEN_WIDTH/(float)SCREEN_HEIGHT;
     return glm::perspective(FOVrads,aspect,0.1f,100.0f);
 }
 
 void GameWindow::UseShaderProgram(GLuint program){
     glUseProgram(program);
-}
+}*/
 
 void GameWindow::SetClearColor(float r,float g,float b,float a){
     if (VERBOSE) fprintf(stderr, "Setting clear color to (%f %f %f %f)\n",r,b,g,a);
@@ -121,7 +114,7 @@ void GameWindow::Flip(void){
     SDL_GL_SwapWindow(SCREEN);
 }
 
-glm::mat4 GameWindow::SetFOV(float newFOV){
+/*glm::mat4 GameWindow::SetFOV(float newFOV){
     if (VERBOSE) fprintf(stderr, "Setting FOV to %f degrees\n", newFOV);
     SCREEN_FOV=newFOV;
     ProjectionMatrix=CalculateProjectionMatrix();
@@ -147,7 +140,7 @@ void GameWindow::SetBackFaceCull(bool newBackFaceCull){
     }
     BACK_FACE_CULL=newBackFaceCull;
     if (VERBOSE) fprintf(stderr, "Enable Backface Culling: %s\n", newBackFaceCull ? "true" : "false");
-}
+   }*/
 
 void GameWindow::End(){
     SDL_DestroyWindow(SCREEN);
