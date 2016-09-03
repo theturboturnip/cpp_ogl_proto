@@ -18,8 +18,10 @@ glm::mat4 Transform::Evaluate(){
     glm::mat4 rotationMat=glm::rotate(rotation.x,glm::vec3(1,0,0));
     rotationMat=glm::rotate(rotationMat,rotation.y,glm::vec3(0,1,0));
     rotationMat=glm::rotate(rotationMat,rotation.z,glm::vec3(0,0,1));
-    toReturn*=rotationMat;
-    toReturn=glm::translate(toReturn,position);
+    glm::mat4 translateMat=glm::translate(toReturn,-position);
+    //toReturn*=rotationMat;
+    //scale,then rotate, then translate
+    toReturn=translateMat*rotationMat*toReturn;
     return toReturn;
 }
 
@@ -41,7 +43,7 @@ void Material::Apply(glm::mat4 MVP){
     for(i=0;i<texKeys->size();i++)
         glUniform1i((*texKeys)[i],(*textures)[i]);
     glm::vec3 v;
-    for(i=0;i<floatKeys->size();i++){
+    for(i=0;i<vecKeys->size();i++){
         v=(*vectors)[i];
         glUniform3f((*vecKeys)[i],v[0],v[1],v[2]);
     }
@@ -67,12 +69,13 @@ bool Material::SetTex(const char* key,GLuint toSet){
     return true;
 }
 
-bool Material::SetVector(const char* key,glm::vec3 toSet){
+bool Material::SetVector(const char* key,glm::vec3 *toSet){
     GLuint loc=glGetUniformLocation(shaderProgram, key);
+    fprintf(stderr,"location of %s is %d\n",key,loc);
     if (loc<0)
         return false;
     vecKeys->push_back(loc);
-    vectors->push_back(toSet);
+    vectors->push_back(*toSet);
     return true;
 }
 

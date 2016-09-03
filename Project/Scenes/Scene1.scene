@@ -1,1 +1,7 @@
-ObjectName=Cube
+OBJECT_START
+Pos=0,0,5
+Rot=45,45,0
+Scale=1,1,1
+Material=Red
+Mesh=Cube
+OBJECT_END

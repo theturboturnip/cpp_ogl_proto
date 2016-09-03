@@ -9,27 +9,7 @@
 
 //using namespace std;
 
-Material* LoadMaterial(const char *name){
-    //Create a material based on a file
-    char matPath[256];
-    sprintf(matPath,"%s/Materials/%s.mat",projectFolder,name);
-    PlaygroundFile *matFile=new PlaygroundFile(matPath);
-    char vertShaderLoc[256],fragShaderLoc[256];
-    std::string vertName=matFile->IdentifyValue("VertShader"),fragName=matFile->IdentifyValue("FragShader");
-    sprintf(vertShaderLoc,"%s/Shaders/%s.glsl",projectFolder,vertName.c_str());
-    sprintf(fragShaderLoc,"%s/Shaders/%s.glsl",projectFolder,fragName.c_str());
-    GLuint sID=LoadShadersIntoProgram(vertShaderLoc,fragShaderLoc);
-    Material *toReturn=new Material(sID);
-    //We can load in textures and floats and vectors here if needed
-    return toReturn;
-}
 
-Mesh* LoadMesh(const char* name){
-    char meshPath[256];
-    //fprintf(stderr,  "%s/Meshes/%s.obj",projectFolder,name);
-    sprintf(meshPath,"%s/Meshes/%s.obj",projectFolder,name);
-    return new Mesh(meshPath);
-}
 
 bool LoadObject(const char *name){
     //Find the object file
@@ -38,8 +18,8 @@ bool LoadObject(const char *name){
     PlaygroundFile *objectFile=new PlaygroundFile(objectPath);
     
     //Get the material and mesh
-    Material *material=LoadMaterial(objectFile->IdentifyValue("MaterialName").c_str());
-    Mesh *mesh=LoadMesh(objectFile->IdentifyValue("MeshName").c_str());
+    Material *material=LoadMaterial(objectFile->IdentifyValue("MaterialName").c_str(),projectFolder);
+    Mesh *mesh=LoadMesh(objectFile->IdentifyValue("MeshName").c_str(),projectFolder);
 
     //Create the object and send to the object vector
     //Currently assuming pos rot and scale, it should be loaded from the object
@@ -88,7 +68,7 @@ int LoadProject(){
     char sceneFileLoc[256];
     sprintf(sceneFileLoc,"%s/Scenes/%s.scene",projectFolder,sceneName.c_str());
     fprintf(stderr,"Looking for scene file at %s\n",sceneFileLoc);
-    PlaygroundFile *scene=new PlaygroundFile(sceneFileLoc);
+    PlaygroundScene *scene=new PlaygroundScene(sceneFileLoc);
 
     //Load Objects
     /*int objCount=0;
@@ -97,8 +77,9 @@ int LoadProject(){
         fprintf(stderr,"ObjectCount not present in starting scene, assuming no objects.\n");
         return 1;
         }*/
-    std::string objectName=scene->IdentifyValue("ObjectName");
-    LoadObject(objectName.c_str());
+    /*std::string objectName=scene->IdentifyValue("ObjectName");
+      LoadObject(objectName.c_str());*/
+    objects=scene->IdentifyObjects(projectFolder);
     return 1;
 }
 

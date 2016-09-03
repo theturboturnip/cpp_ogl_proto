@@ -7,6 +7,8 @@
 #include <SDL_opengl.h>
 #include <SDL_image.h>
 #include "loader.h"
+#include "object.h"
+#include "mesh.h"
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -177,7 +179,7 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3], glm::mat3 *transform,
   vector<glm::vec2> uvs;
   vector< unsigned int > vertexIndices, uvIndices, normalIndices;
   int line=0;
-  int i;
+  uint i;
   while (1){
     //Find first word of line
     char lineHeader[128];
@@ -299,4 +301,79 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale){
     glm::mat3 transform;
     transform = glm::mat3(scale);
     return LoadModelFromFile(modelPath, buffers, &transform, NULL);
+}
+
+/*
+    PLAYGROUND FILES
+                      */
+
+void SplitString(string& str, char delim,vector<string> *v) {
+    auto i = 0;
+    auto pos = str.find(delim);
+    while (pos != string::npos) {
+      v->push_back(str.substr(i, pos-i));
+      i = ++pos;
+      pos = str.find(delim, pos);
+
+      if (pos == string::npos)
+         v->push_back(str.substr(i, str.length()));
+    }
+}
+
+
+glm::vec3* stov3(string s){
+    vector<string> *vecConvUtil=new vector<string>();
+    SplitString(s,',',vecConvUtil);
+    glm::vec3 *toReturn=new glm::vec3(0);
+    toReturn->x=stof((*vecConvUtil)[0]);
+    toReturn->y=stof((*vecConvUtil)[1]);
+    toReturn->z=stof((*vecConvUtil)[2]);
+    return toReturn;
+}
+
+
+Material* LoadMaterial(const char *name, const char* projectFolder){
+    //Create a material based on a file
+    char matPath[256];
+    sprintf(matPath,"%s/Materials/%s.mat",projectFolder,name);
+    PlaygroundFile *matFile=new PlaygroundFile(matPath);
+    char vertShaderLoc[256],fragShaderLoc[256];
+    std::string vertName=matFile->IdentifyValue("VertShader"),fragName=matFile->IdentifyValue("FragShader");
+    sprintf(vertShaderLoc,"%s/Shaders/%s.glsl",projectFolder,vertName.c_str());
+    sprintf(fragShaderLoc,"%s/Shaders/%s.glsl",projectFolder,fragName.c_str());
+    GLuint sID=LoadShadersIntoProgram(vertShaderLoc,fragShaderLoc);
+    Material *toReturn=new Material(sID);
+    //We can load in textures and floats and vectors here if needed
+    std::string key,value;
+    char texPath[256];
+    float floatVal;
+    glm::vec3 *vecVal;
+    GLuint texID;
+    for(uint i=0;i<matFile->keys->size();i++){
+        key=(*(matFile->keys))[i];
+        value=(*(matFile->values))[i];
+        if (key.compare("FragShader")==0||key.compare("VertShader")==0||key.compare("")==0)
+            continue;
+        if (value.back()=='f'){
+            floatVal=std::stof(value);
+            toReturn->SetFloat(key.c_str(),floatVal);
+        }else if (value.find(',')!=std::string::npos){
+            fprintf(stderr,"Found vec3 %s for material with key %s\n",value.c_str(),key.c_str());
+            vecVal=stov3(value);
+            toReturn->SetVector(key.c_str(),vecVal);
+        }else{
+            sprintf(texPath,"%s/Textures/%s",projectFolder,key.c_str());
+            texID=LoadTextureFromFile(texPath,GL_RGB);
+            if (texID!=0)
+                toReturn->SetTex(key.c_str(),texID);
+        }
+    }
+    return toReturn;
+}
+
+Mesh* LoadMesh(const char* name, const char* projectFolder){
+    char meshPath[256];
+    //fprintf(stderr,  "%s/Meshes/%s.obj",projectFolder,name);
+    sprintf(meshPath,"%s/Meshes/%s.obj",projectFolder,name);
+    return new Mesh(meshPath);
 }

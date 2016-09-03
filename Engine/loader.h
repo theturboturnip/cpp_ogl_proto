@@ -12,6 +12,8 @@
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "mesh.h"
+#include "playground_parser.h"
 using namespace std;
 
 GLuint LoadShaderFromFile(string pathString,GLenum shaderType);
@@ -19,6 +21,9 @@ GLuint LoadShadersIntoProgram(string vertexPath,string fragPath,GLuint program=0
 GLuint LoadTextureFromFile(string imagePath, GLuint imageType);
 int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale=1.0);
 int LoadModelFromFile(string modelPath, GLuint buffers[3], glm::mat3 *transform=NULL, glm::vec3 *translation=NULL);
+Material* LoadMaterial(const char* name, const char* projectFolder);
+Mesh* LoadMesh(const char* name, const char* projectFolder);
+
 
 #endif // __INC_LOADER_H__
 

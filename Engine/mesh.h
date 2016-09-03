@@ -2,7 +2,6 @@
 #define __INC_MESH_H__
 
 #include "includes.h"
-#include "loader.h"
 
 class Transform{
 public:
@@ -16,7 +15,7 @@ public:
     Material(GLuint sID);
     bool SetFloat(const char* floatKey,float toSet);
     bool SetTex(const char* texKey,GLuint tex);
-    bool SetVector(const char* vecKey,glm::vec3 vec);
+    bool SetVector(const char* vecKey,glm::vec3 *vec);
     void Apply(glm::mat4 MVP);
 private:
     std::vector<GLuint> *floatKeys,*texKeys,*vecKeys;
@@ -31,7 +30,7 @@ private:
 
 class Mesh{
 public:
-    Mesh(string modelPath="");
+    Mesh(std::string modelPath="");
     void Draw();
 protected:
     GLuint model[3],VertexArrayID;

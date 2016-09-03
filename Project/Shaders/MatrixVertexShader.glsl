@@ -7,6 +7,7 @@ layout(location=2) in vec3 normal;
 
 // Values that stay constant for the whole mesh.
 uniform mat4 MVP;
+uniform vec3 inColor;
 
 void main(){
     // Output position of the vertex, in clip space : MVP * position

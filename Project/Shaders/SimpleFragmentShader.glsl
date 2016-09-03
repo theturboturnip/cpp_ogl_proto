@@ -1,5 +1,6 @@
 #version 330 core
+uniform vec3 inColor;
 out vec3 color;
 void main(){
-     color=vec3(1,0,0);
+     color=inColor;//*vec3(1,0.5,0.5);
 }
