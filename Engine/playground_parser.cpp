@@ -45,11 +45,9 @@ void PlaygroundFile::SplitString(string& str, char delim,vector<string> *v) {
 }
 
 string PlaygroundFile::IdentifyValue(const char* key){
-    fprintf(stderr,"%d\n",keys->size());
     int size=keys->size();
     for(int i=0;i<size;i++){
         if ((*keys)[i].compare(key)==0){
-            fprintf(stderr,"%s vs %s\n",(*keys)[i].c_str(),key);
             return (*values)[i];
         }
     }
