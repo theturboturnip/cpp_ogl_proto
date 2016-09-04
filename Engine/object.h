@@ -5,7 +5,7 @@
 #include <map>
 class Object{
 public:
-    Object(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *scale,Mesh *m=NULL,Material *material=NULL,const char* _type="",std::map<std::string,std::string> *_data=NULL);
+    Object(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *scale=NULL,Mesh *m=NULL,Material *material=NULL,const char* _type="",std::map<std::string,std::string> *_data=NULL);
     void Draw(glm::mat4 *VP);
     void Draw(glm::mat4 *VP,Material *overrideMat);
     Transform *t;
@@ -18,7 +18,6 @@ public:
 class Camera : public Object{
 public:
     Camera(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *scale,const char* _type="Camera",std::map<std::string,std::string> *_data=NULL);
-    const char* type;
     glm::mat4 projectionMatrix,VP;
     glm::mat4 CalculateVP();
     void SetAspectRatio(float aspectRatio);
@@ -35,4 +34,14 @@ public:
 public:
     PointLight(glm::vec3 *pos,const char* _type="Light",std::map<std::string,std::string> *_data=NULL);
 */
+
+class ShadowLight : public Object{
+public:
+    ShadowLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type="SLight",std::map<std::string,std::string> *_data=NULL);
+    virtual void FindVP(int resX,int resY);
+    void InitShadowRender();
+    glm::mat4 VP;
+    GLuint depthMapFBO,depthMapTex;
+};
+    
 #endif

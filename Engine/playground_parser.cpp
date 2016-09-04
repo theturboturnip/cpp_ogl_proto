@@ -85,6 +85,7 @@ void PlaygroundScene::IdentifyObjects(const char *projectFolder){
     Object *o;
     string type;
     objects=new vector<Object>();
+    sLights=new vector<ShadowLight>();
     //vector<Object> *objects=new vector<Object*>();
     map<string,string> *data;
     for(uint i=0;i<lines->size();i++){
@@ -102,13 +103,15 @@ void PlaygroundScene::IdentifyObjects(const char *projectFolder){
             has_object=false;
             //Add all known data to the object
             if (type.compare("Camera")==0){
-                fprintf(stderr,"Camera found!\n");
                 camera=new Camera(pos,rot,scale,type.c_str(),data);
+            }else if (type.compare("SLight")==0){
+                ShadowLight *l=new ShadowLight(pos,rot,type.c_str(),data);
+                sLights->push_back(*l);
             }else{
                 o=new Object(pos,rot,scale,mesh,mat,type.c_str(),data);
+                //Push object onto list
+                objects->push_back(*o);
             }
-            //Push object onto list
-            objects->push_back(*o);
         }else if (has_object){
             //Use this line to determine more data on our object
             key=(*keys)[i];
@@ -128,16 +131,17 @@ void PlaygroundScene::IdentifyObjects(const char *projectFolder){
             }else{
                 data->emplace(key,value);
             }
+        }else{
+            key=(*keys)[i];
+            value=(*values)[i];
+            if (key.compare("ShadowMaterial")==0){
+                shadowMat=LoadMaterial(value.c_str(),projectFolder);
+            }
         }
+
     }
     if (has_object){
-        if (type.compare("Camera")==0){
-            camera=new Camera(pos,rot,scale,type.c_str(),data);
-        }else{
-            o=new Object(pos,rot,scale,mesh,mat,type.c_str(),data);
-        }        
-        //Push object onto list
-        objects->push_back(*o);
+        fprintf(stderr,"Object leak detected in scene\n");
     }
     //return objects;
 }

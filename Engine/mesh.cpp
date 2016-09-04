@@ -34,26 +34,50 @@ Material::Material(GLuint sID){
     textures=new std::vector<GLuint>();
     vectors=new std::vector<glm::vec3>();
     matrices=new std::vector<glm::mat4>();
+    matModelR=new std::vector<bool>();
     shaderProgram=sID;
     MVPloc=glGetUniformLocation(shaderProgram,"MVP");
 }
 
-void Material::Apply(glm::mat4 MVP){
+static void gl_check_error(const char *msg)
+{
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        fprintf(stderr,"OpenGL error: %s : %d\n",msg,err);
+    }
+}
+
+void Material::Apply(glm::mat4 M,glm::mat4 VP){
     glUseProgram(shaderProgram);
+    glm::mat4 MVP=VP*M;
     glUniformMatrix4fv(MVPloc, 1,GL_FALSE,&MVP[0][0]);
+
     uint i;
     for(i=0;i<floatKeys->size();i++)
         glUniform1f((*floatKeys)[i],(*floats)[i]);
-    for(i=0;i<texKeys->size();i++)
-        glUniform1i((*texKeys)[i],(*textures)[i]);
+    glActiveTexture(GL_TEXTURE0);
+    for(i=0;i<texKeys->size();i++){
+        
+        //
+        glBindTexture(GL_TEXTURE_2D,(*textures)[i]);
+
+        glUniform1i((*texKeys)[i],0);
+    }
     glm::vec3 v;
     for(i=0;i<vecKeys->size();i++){
         v=(*vectors)[i];
         glUniform3f((*vecKeys)[i],v[0],v[1],v[2]);
     }
+    glm::mat4 mat;
     for(i=0;i<matKeys->size();i++){
-        glUniformMatrix4fv((*matKeys)[i],1,GL_FALSE,&((*matrices)[i])[0][0]);
+        mat=((*matrices)[i]);
+        if ((*matModelR)[i])
+            mat=mat*M;
+        glUniformMatrix4fv((*matKeys)[i],1,GL_FALSE,&mat[0][0]);
     }
+    glBindTexture(GL_TEXTURE_2D,1);
+    glUniform1i(1,0);
+    gl_check_error("Material::apply:done");
 }
 
 bool Material::SetFloat(const char* key,float toSet){
@@ -65,8 +89,9 @@ bool Material::SetFloat(const char* key,float toSet){
     return true;
 }
 
-bool Material::SetTex(const char* key,GLuint toSet){
+bool Material::SetTexture(const char* key,GLuint toSet){
     GLuint loc=glGetUniformLocation(shaderProgram, key);
+    //fprintf(stderr,"Found tex key %s at %d\n",key,toSet);
     if (loc<0)
         return false;
     texKeys->push_back(loc);
@@ -76,11 +101,21 @@ bool Material::SetTex(const char* key,GLuint toSet){
 
 bool Material::SetVector(const char* key,glm::vec3 *toSet){
     GLuint loc=glGetUniformLocation(shaderProgram, key);
-    fprintf(stderr,"location of %s is %d\n",key,loc);
+    //fprintf(stderr,"location of %s is %d\n",key,loc);
     if (loc<0)
         return false;
     vecKeys->push_back(loc);
     vectors->push_back(*toSet);
+    return true;
+}
+
+bool Material::SetMatrix(const char* key,glm::mat4 *toSet,bool modelRelative){
+    GLuint loc=glGetUniformLocation(shaderProgram,key);
+    if(loc<0)
+        return false;
+    matKeys->push_back(loc);
+    matrices->push_back(*toSet);
+    matModelR->push_back(modelRelative);
     return true;
 }
 

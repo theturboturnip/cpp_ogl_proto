@@ -91,20 +91,68 @@ void InitGraphics(){
 
 
 int GameLoop(){
+    if (1) {
+        GLenum err;
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            fprintf(stderr,"Game a OpenGL error: %d\n",err);
+        }
+    }
     window->ClearWindow();
+    glm::mat4 *VP;
+    uint i,j,sLightCount;
+    ShadowLight *l;
     
-    //Basic idea:
-    //Foreach object
-        //Script update
-        //Render
-    //Object has a transform (model matrix+pos+rot+scale+parent) and a mesh (vertex data) and a material
+    //Basic Light Rendering Steps:
+    //If the light does shadowing:
+    //    Query for VP
+    //    Switch current renderbuffer to that of the light
+    //    Render all objects
+    //    Switch renderbuffer back
+    //    Render all objects again
+    
+    sLightCount=scene->sLights->size();
+    //fprintf(stderr,"%d",sLightCount);
+    //glClearDepth(0.5f);
+    if (1) {
+        GLenum err;
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            fprintf(stderr,"Game b OpenGL error: %d\n",err);
+        }
+    }
+    for(j=0;j<sLightCount;j++){
+        
+        l=&((*scene->sLights)[j]);
+        VP=&(l->VP);
+        l->InitShadowRender();
+        for(i=0;i<scene->objects->size();i++){
+            (*scene->objects)[i].Draw(VP,&(*scene->shadowMat));
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+    window->ClearWindow();
+    if (1) {
+        GLenum err;
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            fprintf(stderr,"Game c OpenGL error: %d\n",err);
+        }
+    }
 
-    //For rendering shadows etc. change the framebuffer and draw all objects with an override material
-    //Then switch the framebuffer back to zero, pass in the render result as a texture before rendering final
-    //glBindFramebuffer
-    glm::mat4 VP=(scene->camera->VP);
-    for(uint i=0;i<scene->objects->size();i++){
-        (*scene->objects)[i].Draw(&VP);
+    //glClearDepth(1);
+    VP=&(scene->camera->VP);
+    for(i=0;i<scene->objects->size();i++){
+        Material *m=(*scene->objects)[i].mat;
+        if(sLightCount>0&&m!=NULL){
+            (*scene->objects)[i].mat->SetMatrix("SLightMVP",&((*scene->sLights)[0].VP));
+            (*scene->objects)[i].mat->SetTexture("SLightShadowMap",((*scene->sLights)[0].depthMapTex));
+        }
+        (*scene->objects)[i].Draw(VP);
+    }
+
+    if (1) {
+        GLenum err;
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            fprintf(stderr,"Game d OpenGL error: %d\n",err);
+        }
     }
 	const char *error;
     error = SDL_GetError();
@@ -112,6 +160,12 @@ int GameLoop(){
 		fprintf(stderr,"SDL Error: %s\n", error);
 		SDL_ClearError();
 	}
+    if (1) {
+        GLenum err;
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            fprintf(stderr,"Game loop end OpenGL error: %d\n",err);
+        }
+    }
     window->Flip();
     return 1;
 }
@@ -124,7 +178,19 @@ int main(int argc,char* argv[]){
     projectFolder=argv[1];
     if (LoadProject()==0)
         return 0;
+    if (1) {
+        GLenum err;
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            fprintf(stderr,"Game init a OpenGL error: %d\n",err);
+        }
+    }
     InitGraphics();
+    if (1) {
+        GLenum err;
+        while ((err = glGetError()) != GL_NO_ERROR) {
+            fprintf(stderr,"Game init b OpenGL error: %d\n",err);
+        }
+    }
     bool shouldEnd=false;
     SDL_Event e;
     while(!shouldEnd){

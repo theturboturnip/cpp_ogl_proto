@@ -14,15 +14,17 @@ class Material{
 public:
     Material(GLuint sID);
     bool SetFloat(const char* floatKey,float toSet);
-    bool SetTex(const char* texKey,GLuint tex);
+    bool SetTexture(const char* texKey,GLuint tex);
     bool SetVector(const char* vecKey,glm::vec3 *vec);
-    void Apply(glm::mat4 MVP);
+    bool SetMatrix(const char* matKey,glm::mat4 *mat,bool modelRelative=true);
+    void Apply(glm::mat4 M,glm::mat4 VP);
 private:
     std::vector<GLuint> *floatKeys,*texKeys,*vecKeys,*matKeys;
     std::vector<float> *floats;
     std::vector<GLuint> *textures;
     std::vector<glm::vec3> *vectors;
     std::vector<glm::mat4> *matrices;
+    std::vector<bool> *matModelR;
     //std::vector<> colors;
     GLuint shaderProgram;
     GLuint MVPloc;

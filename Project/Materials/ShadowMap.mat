@@ -1,0 +1,3 @@
+VertShader=ShadowMapVertexShader
+FragShader=ShadowMapFragmentShader
+inColor=1,1,1

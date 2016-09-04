@@ -365,7 +365,7 @@ Material* LoadMaterial(const char *name, const char* projectFolder){
             sprintf(texPath,"%s/Textures/%s",projectFolder,key.c_str());
             texID=LoadTextureFromFile(texPath,GL_RGB);
             if (texID!=0)
-                toReturn->SetTex(key.c_str(),texID);
+                toReturn->SetTexture(key.c_str(),texID);
         }
     }
     return toReturn;

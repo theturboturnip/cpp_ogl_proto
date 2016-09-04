@@ -8,10 +8,11 @@ layout(location=2) in vec3 normal;
 // Values that stay constant for the whole mesh.
 uniform mat4 MVP;
 uniform vec3 inColor;
+uniform mat4 SLightMVP;
 
-out vec2 uv;
+out vec3 shadowmapPos;
 void main(){
     // Output position of the vertex, in clip space : MVP * position
     gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
-    uv=UV;
+    shadowmapPos=(SLightMVP*vec4(vertexPosition_modelspace,1)).xyz;
 }

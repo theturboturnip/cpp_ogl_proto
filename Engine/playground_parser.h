@@ -24,6 +24,8 @@ public:
     void IdentifyObjects(const char* projectFolder); 
     glm::vec3* stov3(string s);
     vector<Object> *objects;
+    vector<ShadowLight> *sLights;
+    Material *shadowMat;
     Camera *camera;
 };
     
