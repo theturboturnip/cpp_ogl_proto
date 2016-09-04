@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <map>
 #include "loader.h"
 #include "object.h"
 #include "mesh.h"
@@ -74,7 +75,7 @@ PlaygroundScene::PlaygroundScene(ifstream *file) : PlaygroundFile(file){
     ParseFile(file);
 }
 
-vector<Object>* PlaygroundScene::IdentifyObjects(const char *projectFolder){
+void PlaygroundScene::IdentifyObjects(const char *projectFolder){
     //Cycle through lines until we see OBJECT_START
     string line,key,value;
     bool has_object=false;
@@ -82,7 +83,10 @@ vector<Object>* PlaygroundScene::IdentifyObjects(const char *projectFolder){
     Material *mat;
     Mesh *mesh;
     Object *o;
-    vector<Object> *objects=new vector<Object>();
+    string type;
+    objects=new vector<Object>();
+    //vector<Object> *objects=new vector<Object*>();
+    map<string,string> *data;
     for(uint i=0;i<lines->size();i++){
         line=(*lines)[i];
         if (line.compare("OBJECT_START")==0){
@@ -90,12 +94,19 @@ vector<Object>* PlaygroundScene::IdentifyObjects(const char *projectFolder){
             pos=new glm::vec3(0);
             rot=new glm::vec3(0);
             scale=new glm::vec3(1,1,1);
+            data=new map<string,string>();
             mat=NULL;
             mesh=NULL;
+            type="";
         }else if (line.compare("OBJECT_END")==0){
             has_object=false;
             //Add all known data to the object
-            o=new Object(pos,rot,scale,mesh,mat);
+            if (type.compare("Camera")==0){
+                fprintf(stderr,"Camera found!\n");
+                camera=new Camera(pos,rot,scale,type.c_str(),data);
+            }else{
+                o=new Object(pos,rot,scale,mesh,mat,type.c_str(),data);
+            }
             //Push object onto list
             objects->push_back(*o);
         }else if (has_object){
@@ -112,16 +123,23 @@ vector<Object>* PlaygroundScene::IdentifyObjects(const char *projectFolder){
                 mesh=LoadMesh(value.c_str(),projectFolder);
             }else if (key.compare("Material")==0){
                 mat=LoadMaterial(value.c_str(),projectFolder);
+            }else if (key.compare("Type")==0){
+                type=value;
+            }else{
+                data->emplace(key,value);
             }
         }
     }
     if (has_object){
-        //Add all known data to the object
-        o=new Object(pos,rot,scale,mesh,mat);
+        if (type.compare("Camera")==0){
+            camera=new Camera(pos,rot,scale,type.c_str(),data);
+        }else{
+            o=new Object(pos,rot,scale,mesh,mat,type.c_str(),data);
+        }        
         //Push object onto list
         objects->push_back(*o);
     }
-    return objects;
+    //return objects;
 }
 
 glm::vec3* PlaygroundScene::stov3(string s){

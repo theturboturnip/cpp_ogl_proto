@@ -48,6 +48,7 @@ GameWindow::GameWindow(int width,int height,const char *name,bool resizeable, bo
     }
     SCREEN_WIDTH=width;
     SCREEN_HEIGHT=height;
+    aspect=((float)SCREEN_WIDTH)/SCREEN_HEIGHT;
     if (verbose) EndAttempt(); //Finished setting up window
 
     if (verbose) StartAttempt("set up OpenGL");

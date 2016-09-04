@@ -10,6 +10,8 @@
 const char* projectFolder;
 int main(int argc,char* argv[]);
 GameWindow *window=NULL;
-std::vector<Object> *objects;
+/*std::vector<Object*> *objects;
+  Camera *camera;*/
+PlaygroundScene *scene;
 
 #endif

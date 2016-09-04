@@ -15,9 +15,9 @@ Transform::Transform(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *_scale){
 glm::mat4 Transform::Evaluate(){
     //Scale,Rotate,Translate
     glm::mat4 toReturn=glm::scale(scale);
-    glm::mat4 rotationMat=glm::rotate(rotation.x,glm::vec3(1,0,0));
-    rotationMat=glm::rotate(rotationMat,rotation.y,glm::vec3(0,1,0));
-    rotationMat=glm::rotate(rotationMat,rotation.z,glm::vec3(0,0,1));
+    glm::mat4 rotationMat=glm::rotate(glm::radians(rotation.x),glm::vec3(1,0,0));
+    rotationMat=glm::rotate(rotationMat,glm::radians(rotation.y),glm::vec3(0,1,0));
+    rotationMat=glm::rotate(rotationMat,glm::radians(rotation.z),glm::vec3(0,0,1));
     glm::mat4 translateMat=glm::translate(toReturn,-position);
     //toReturn*=rotationMat;
     //scale,then rotate, then translate
@@ -29,14 +29,18 @@ Material::Material(GLuint sID){
     floatKeys=new std::vector<GLuint>();
     texKeys=new std::vector<GLuint>();
     vecKeys=new std::vector<GLuint>();
+    matKeys=new std::vector<GLuint>();
     floats=new std::vector<float>();
     textures=new std::vector<GLuint>();
     vectors=new std::vector<glm::vec3>();
+    matrices=new std::vector<glm::mat4>();
     shaderProgram=sID;
     MVPloc=glGetUniformLocation(shaderProgram,"MVP");
 }
 
 void Material::Apply(glm::mat4 MVP){
+    glUseProgram(shaderProgram);
+    glUniformMatrix4fv(MVPloc, 1,GL_FALSE,&MVP[0][0]);
     uint i;
     for(i=0;i<floatKeys->size();i++)
         glUniform1f((*floatKeys)[i],(*floats)[i]);
@@ -47,8 +51,9 @@ void Material::Apply(glm::mat4 MVP){
         v=(*vectors)[i];
         glUniform3f((*vecKeys)[i],v[0],v[1],v[2]);
     }
-    glUseProgram(shaderProgram);
-    glUniformMatrix4fv(MVPloc, 1,GL_FALSE,&MVP[0][0]);
+    for(i=0;i<matKeys->size();i++){
+        glUniformMatrix4fv((*matKeys)[i],1,GL_FALSE,&((*matrices)[i])[0][0]);
+    }
 }
 
 bool Material::SetFloat(const char* key,float toSet){

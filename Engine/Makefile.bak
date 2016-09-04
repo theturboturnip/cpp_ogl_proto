@@ -27,11 +27,7 @@ game: $(GAME_OBJS)
 	$(LINK) $(GAME_OBJS) $(LINKFLAGS) -o game
 
 clean:
-	rm -f *.o prog *~
-
-rebuild:
-	make clean
-	make prog
+	rm *.o prog *~
 
 depend:
 	makedepend -- $(CPPFLAGS) -- $(SRCS)

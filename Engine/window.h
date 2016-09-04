@@ -13,6 +13,7 @@ public:
     void End(void);
     void ClearWindow(void);
     void Flip(void);
+    float aspect;
 private:
     int SCREEN_WIDTH,SCREEN_HEIGHT;
     const char *SCREEN_NAME;

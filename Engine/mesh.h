@@ -18,10 +18,11 @@ public:
     bool SetVector(const char* vecKey,glm::vec3 *vec);
     void Apply(glm::mat4 MVP);
 private:
-    std::vector<GLuint> *floatKeys,*texKeys,*vecKeys;
+    std::vector<GLuint> *floatKeys,*texKeys,*vecKeys,*matKeys;
     std::vector<float> *floats;
     std::vector<GLuint> *textures;
     std::vector<glm::vec3> *vectors;
+    std::vector<glm::mat4> *matrices;
     //std::vector<> colors;
     GLuint shaderProgram;
     GLuint MVPloc;

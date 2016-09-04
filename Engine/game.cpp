@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <string.h>
 //#include <sstream>
 #include <vector>
+#include <typeinfo>
 #include "playground_parser.h"
 
 
@@ -11,7 +13,7 @@
 
 
 
-bool LoadObject(const char *name){
+/*bool LoadObject(const char *name){
     //Find the object file
     char objectPath[256];
     sprintf(objectPath,"%s/Objects/%s.object",projectFolder,name);
@@ -27,7 +29,7 @@ bool LoadObject(const char *name){
     Object *o=new Object(pos,rot,scale,mesh,material);
     objects->push_back(*o);
     return true;
-}
+}*/
 
 int LoadProject(){
     //Create GameWindow
@@ -59,7 +61,7 @@ int LoadProject(){
     window=new GameWindow(width,height,name,resizeable);
 
     //Find scene
-    objects=new std::vector<Object>();
+    //objects=new std::vector<Object>();
     std::string sceneName=config->IdentifyValue("StartScene");
     if(sceneName.compare("")==0){
         fprintf(stderr,"No starting scene was found so no objects will be loaded.\n");
@@ -68,37 +70,41 @@ int LoadProject(){
     char sceneFileLoc[256];
     sprintf(sceneFileLoc,"%s/Scenes/%s.scene",projectFolder,sceneName.c_str());
     fprintf(stderr,"Looking for scene file at %s\n",sceneFileLoc);
-    PlaygroundScene *scene=new PlaygroundScene(sceneFileLoc);
+    scene=new PlaygroundScene(sceneFileLoc);
 
     //Load Objects
-    /*int objCount=0;
-    std::string objCountStr=scene->IdentifyValue("ObjectCount");
-    if (objCount.compare("")==0){
-        fprintf(stderr,"ObjectCount not present in starting scene, assuming no objects.\n");
-        return 1;
-        }*/
-    /*std::string objectName=scene->IdentifyValue("ObjectName");
-      LoadObject(objectName.c_str());*/
-    objects=scene->IdentifyObjects(projectFolder);
+    
+    scene->IdentifyObjects(projectFolder);
+    scene->camera->SetAspectRatio(window->aspect);
+    scene->camera->CalculateVP();
+
     return 1;
 }
 
 
-
+void InitGraphics(){
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+}
 
 
 int GameLoop(){
     window->ClearWindow();
-    //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_BACK);
+    
     //Basic idea:
     //Foreach object
         //Script update
         //Render
     //Object has a transform (model matrix+pos+rot+scale+parent) and a mesh (vertex data) and a material
-    glm::mat4 VP=glm::perspective(90.0f,16.0f/9.0f,0.3f,50.0f);//*glm::translate(0.0f,0.0f,5.0f);
-    for(uint i=0;i<objects->size();i++){
-        (*objects)[i].Draw(&VP);
+
+    //For rendering shadows etc. change the framebuffer and draw all objects with an override material
+    //Then switch the framebuffer back to zero, pass in the render result as a texture before rendering final
+    //glBindFramebuffer
+    glm::mat4 VP=(scene->camera->VP);
+    for(uint i=0;i<scene->objects->size();i++){
+        (*scene->objects)[i].Draw(&VP);
     }
 	const char *error;
     error = SDL_GetError();
@@ -118,6 +124,7 @@ int main(int argc,char* argv[]){
     projectFolder=argv[1];
     if (LoadProject()==0)
         return 0;
+    InitGraphics();
     bool shouldEnd=false;
     SDL_Event e;
     while(!shouldEnd){

@@ -21,8 +21,10 @@ class PlaygroundScene : public PlaygroundFile{
 public:
     PlaygroundScene(const char* filename);
     PlaygroundScene(ifstream *file);
-    vector<Object>* IdentifyObjects(const char* projectFolder); 
+    void IdentifyObjects(const char* projectFolder); 
     glm::vec3* stov3(string s);
+    vector<Object> *objects;
+    Camera *camera;
 };
     
 #endif
