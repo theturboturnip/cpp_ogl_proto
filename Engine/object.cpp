@@ -33,12 +33,12 @@ Camera::Camera(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *scale,const char* _type,
 }
 
 void Camera::SetAspectRatio(float aspectRatio){
-    projectionMatrix=glm::perspective(FOV,aspectRatio,nearClip,farClip);
+    projectionMatrix=glm::perspective(glm::radians(FOV),aspectRatio,nearClip,farClip);
     //projectionMatrix=&();
 }
 
 glm::mat4 Camera::CalculateVP(){
-    VP=(projectionMatrix)*(t->Evaluate());
+    VP=(projectionMatrix)*glm::inverse((t->Evaluate()));
     return VP;
 }
 
@@ -47,8 +47,9 @@ glm::mat4 Camera::CalculateVP(){
     }*/
 
 ShadowLight::ShadowLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type,std::map<std::string,std::string> *_data) : Object(pos,rot,NULL,NULL,NULL,_type,_data){
-    uint resX=std::stoi((*data)["ResolutionX"]),resY=std::stoi((*data)["ResolutionY"]);
-    FindVP(resX,resY);
+    resX=std::stoi((*data)["ResolutionX"]);
+    resY=std::stoi((*data)["ResolutionY"]);
+    FindVP();
     //Gen rendering resources
     glGenFramebuffers(1,&depthMapFBO);
     
@@ -65,6 +66,10 @@ ShadowLight::ShadowLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type,std::ma
                  NULL);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_BORDER);    
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_BORDER);
+    float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
 }
 
 void ShadowLight::InitShadowRender(){
@@ -77,29 +82,37 @@ void ShadowLight::InitShadowRender(){
     glClearColor(0.3,0.4,0.5,1.0);
     glClear(GL_DEPTH_BUFFER_BIT);
     glClearColor(0.0,0.0,0.5,1.0);
+    glViewport(0,0,resX,resY);
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr,"The frame buffer is not working\n");
     }
-    if (0) {
-        glBindTexture(GL_TEXTURE_2D,depthMapTex); //Set texture type
-        float screenData[1024*3];
-        for(int y = 0; y < 32; ++y)		
-            for(int x = 0; x < 32; ++x)
-                screenData[y*32+x] = 0;//1.0-x*0.03;
-        glTexSubImage2D(GL_TEXTURE_2D, 0 ,512, 512, 32, 32, GL_DEPTH_COMPONENT, GL_FLOAT, (GLvoid*)screenData);
-        glReadPixels(510,510,32,32,GL_DEPTH_COMPONENT,GL_FLOAT,screenData);
-        if (0) {
-            for(int y = 0; y < 4; ++y)		
-                for(int x = 0; x < 4; ++x)
-                    fprintf(stderr,"%f:",screenData[y*32+x]);
-            fprintf(stderr,"\n");
-        }
-    }
+    
     while ((err = glGetError()) != GL_NO_ERROR) {
         fprintf(stderr,"OpenGL error: %d\n",err);
     }
 }
 
-void ShadowLight::FindVP(int resX,int resY){
-    VP=glm::perspective(90.0f,((float)resX)/resY,0.3f,50.0f)*(t->Evaluate());
+void ShadowLight::FindVP(/*int resX,int resY*/){
+    VP=glm::perspective(glm::radians(110.0f),((float)resX)/resY,0.3f,50.0f)*glm::inverse((t->Evaluate()));
+}
+
+void ShadowLight::SaveTexture() {
+    glBindTexture(GL_TEXTURE_2D,depthMapTex); //Set texture type
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    float *raw_img = (float*) malloc(resX * resY * sizeof(float));
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_FLOAT, raw_img);
+    SDL_Surface *image=SDL_CreateRGBSurface(0,resX,resY,32,0,0,0,0);
+    unsigned char* image_pixels=(unsigned char*)image->pixels;
+    for(uint i=0;i<resX;i++){
+        for(uint j=0;j<resY;j++){
+            image_pixels[4*(j*resX+i)+0]=255*raw_img[j*resX+i];            
+            image_pixels[4*(j*resX+i)+1]=255*raw_img[j*resX+i];            
+            image_pixels[4*(j*resX+i)+2]=255*raw_img[j*resX+i];            
+            image_pixels[4*(j*resX+i)+3]=255*raw_img[j*resX+i];
+        }
+    }
+    SDL_SaveBMP(image,"depth.bmp");
+    free(image);
+    free(raw_img);
+    //exit(4);
 }

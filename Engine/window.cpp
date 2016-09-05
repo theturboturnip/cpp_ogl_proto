@@ -115,6 +115,10 @@ void GameWindow::Flip(void){
     SDL_GL_SwapWindow(SCREEN);
 }
 
+void GameWindow::ApplyResolution(void){
+    glViewport(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+}
+
 /*glm::mat4 GameWindow::SetFOV(float newFOV){
     if (VERBOSE) fprintf(stderr, "Setting FOV to %f degrees\n", newFOV);
     SCREEN_FOV=newFOV;

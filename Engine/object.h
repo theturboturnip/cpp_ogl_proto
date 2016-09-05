@@ -38,10 +38,12 @@ public:
 class ShadowLight : public Object{
 public:
     ShadowLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type="SLight",std::map<std::string,std::string> *_data=NULL);
-    virtual void FindVP(int resX,int resY);
+    virtual void FindVP();
+    void SaveTexture();
     void InitShadowRender();
     glm::mat4 VP;
     GLuint depthMapFBO,depthMapTex;
+    uint resX,resY;
 };
     
 #endif

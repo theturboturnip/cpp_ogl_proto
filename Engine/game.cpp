@@ -127,8 +127,10 @@ int GameLoop(){
         for(i=0;i<scene->objects->size();i++){
             (*scene->objects)[i].Draw(VP,&(*scene->shadowMat));
         }
+        l->SaveTexture();
     }
     glBindFramebuffer(GL_FRAMEBUFFER,0);
+    window->ApplyResolution();
     window->ClearWindow();
     if (1) {
         GLenum err;
@@ -144,13 +146,21 @@ int GameLoop(){
         Object o=(*scene->objects)[i];
         if(sLightCount>0&&m!=NULL){
             o.mat->SetMatrix("SLightMVP",&((*scene->sLights)[0].VP));
+            glm::mat4 mvp=((*scene->sLights)[0].VP);
+            /*fprintf(stderr,"%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",
+                    mvp[0][0],mvp[0][1],mvp[0][2],mvp[0][3],
+                    mvp[1][0],mvp[1][1],mvp[1][2],mvp[1][3],
+                    mvp[2][0],mvp[2][1],mvp[2][2],mvp[2][3],
+                    mvp[3][0],mvp[3][1],mvp[3][2],mvp[3][3]
+                    );*/                    
             o.mat->SetTexture("SLightShadowMap",((*scene->sLights)[0].depthMapTex));
             o.mat->SetFloat("farPlane",scene->camera->farClip);
-        o.mat->SetFloat("nearPlane",scene->camera->nearClip);
+            o.mat->SetFloat("nearPlane",scene->camera->nearClip);
         }
         
         (*scene->objects)[i].Draw(VP);
     }
+
 
     if (1) {
         GLenum err;
@@ -195,6 +205,7 @@ int main(int argc,char* argv[]){
             fprintf(stderr,"Game init b OpenGL error: %d\n",err);
         }
     }
+    GameLoop();
     bool shouldEnd=false;
     SDL_Event e;
     while(!shouldEnd){
@@ -202,7 +213,6 @@ int main(int argc,char* argv[]){
             if (e.type==SDL_QUIT)
                 shouldEnd=true;
         }
-        GameLoop();
     }
     window->End();
     return 1;

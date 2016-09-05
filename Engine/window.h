@@ -12,6 +12,7 @@ public:
     void SetClearColor(float r,float g,float b,float a=1.0f);
     void End(void);
     void ClearWindow(void);
+    void ApplyResolution(void);
     void Flip(void);
     float aspect;
 private:

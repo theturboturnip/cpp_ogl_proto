@@ -1,2 +1,2 @@
-VertShader=ShadowPassVert
+VertShader=BaseVertexShader
 FragShader=ShadowPassFrag
