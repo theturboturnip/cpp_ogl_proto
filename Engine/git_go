@@ -1,6 +1,6 @@
 git add --all :/
 git status
-echo -n "Enter commit message"
+echo -n "Enter commit message: "
 read MSG
 git commit -m "$MSG"
 git push
