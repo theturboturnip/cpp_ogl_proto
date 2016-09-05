@@ -141,10 +141,14 @@ int GameLoop(){
     VP=&(scene->camera->VP);
     for(i=0;i<scene->objects->size();i++){
         Material *m=(*scene->objects)[i].mat;
+        Object o=(*scene->objects)[i];
         if(sLightCount>0&&m!=NULL){
-            (*scene->objects)[i].mat->SetMatrix("SLightMVP",&((*scene->sLights)[0].VP));
-            (*scene->objects)[i].mat->SetTexture("SLightShadowMap",((*scene->sLights)[0].depthMapTex));
+            o.mat->SetMatrix("SLightMVP",&((*scene->sLights)[0].VP));
+            o.mat->SetTexture("SLightShadowMap",((*scene->sLights)[0].depthMapTex));
+            o.mat->SetFloat("farPlane",scene->camera->farClip);
+        o.mat->SetFloat("nearPlane",scene->camera->nearClip);
         }
+        
         (*scene->objects)[i].Draw(VP);
     }
 
