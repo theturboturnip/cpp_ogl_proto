@@ -11,8 +11,10 @@ uniform vec3 inColor;
 uniform mat4 SLightMVP;
 
 out vec4 shadowmapPos;
+out vec2 uv;
 void main(){
     // Output position of the vertex, in clip space : MVP * position
     gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
     shadowmapPos= (SLightMVP*vec4(vertexPosition_modelspace,1));
+    uv=UV;
 }

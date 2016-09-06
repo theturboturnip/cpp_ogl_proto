@@ -44,6 +44,7 @@ public:
     glm::mat4 VP;
     GLuint depthMapFBO,depthMapTex;
     uint resX,resY;
+    glm::vec3 color;
 };
     
 #endif

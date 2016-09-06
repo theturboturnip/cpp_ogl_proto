@@ -1,5 +1,6 @@
 #include "object.h"
 #include "includes.h"
+#include "loader.h"
 
 Object::Object(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *scale,Mesh *m,Material *material,const char* _type,std::map<std::string,std::string> *_data){
     if(scale==NULL)
@@ -49,6 +50,7 @@ glm::mat4 Camera::CalculateVP(){
 ShadowLight::ShadowLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type,std::map<std::string,std::string> *_data) : Object(pos,rot,NULL,NULL,NULL,_type,_data){
     resX=std::stoi((*data)["ResolutionX"]);
     resY=std::stoi((*data)["ResolutionY"]);
+    color=*stov3((*data)["LightColor"]);
     FindVP();
     //Gen rendering resources
     glGenFramebuffers(1,&depthMapFBO);

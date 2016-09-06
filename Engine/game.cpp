@@ -141,21 +141,24 @@ int GameLoop(){
 
     //glClearDepth(1);
     VP=&(scene->camera->VP);
+    //fprintf(stderr,"Object amount: %d\n",scene->objects->size());
     for(i=0;i<scene->objects->size();i++){
         Material *m=(*scene->objects)[i].mat;
         Object o=(*scene->objects)[i];
         if(sLightCount>0&&m!=NULL){
             o.mat->SetMatrix("SLightMVP",&((*scene->sLights)[0].VP));
-            glm::mat4 mvp=((*scene->sLights)[0].VP);
+            //glm::mat4 mvp=((*scene->sLights)[0].VP);
             /*fprintf(stderr,"%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",
                     mvp[0][0],mvp[0][1],mvp[0][2],mvp[0][3],
                     mvp[1][0],mvp[1][1],mvp[1][2],mvp[1][3],
                     mvp[2][0],mvp[2][1],mvp[2][2],mvp[2][3],
                     mvp[3][0],mvp[3][1],mvp[3][2],mvp[3][3]
-                    );*/                    
-            o.mat->SetTexture("SLightShadowMap",((*scene->sLights)[0].depthMapTex));
-            o.mat->SetFloat("farPlane",scene->camera->farClip);
-            o.mat->SetFloat("nearPlane",scene->camera->nearClip);
+                    );*/   
+            //fprintf(stderr,"Attempting shadowmap assignment for object %d\n",i);
+            o.mat->SetTexture("SLightDepthMap",((*scene->sLights)[0].depthMapTex));
+            o.mat->SetVector("SLightColor",&((*scene->sLights)[0].color));
+            //o.mat->SetFloat("farPlane",scene->camera->farClip);
+            //o.mat->SetFloat("nearPlane",scene->camera->nearClip);
         }
         
         (*scene->objects)[i].Draw(VP);

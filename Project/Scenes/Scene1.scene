@@ -8,9 +8,9 @@ Mesh=Cube
 OBJECT_END
 OBJECT_START
 Type=Mesh
-Pos=0,0,10
+Pos=0,0,2
 Rot=0,0,0
-Scale=0.9,0.9,0.9
+Scale=0.5,0.5,0.5
 Material=ShadowMap
 Mesh=monkey
 OBJECT_END
@@ -28,8 +28,9 @@ Pos=0,0,0
 Rot=0,0,0
 ResolutionX=1024
 ResolutionY=1024
+LightColor=1,0.9,0.9
 OBJECT_END
-OBJECT_START
+//OBJECT_START
 Type=Mesh
 Pos=0.5,0,1.5
 Rot=90,0,0

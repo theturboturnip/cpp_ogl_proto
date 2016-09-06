@@ -5,6 +5,7 @@
 #include <SDL2/SDL_opengl.h>
 #include "loader.h"
 #include "mesh.h"
+#include <map>
 
 Transform::Transform(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *_scale){
     position=(*pos);
@@ -26,7 +27,7 @@ glm::mat4 Transform::Evaluate(){
 }
 
 Material::Material(GLuint sID){
-    floatKeys=new std::vector<GLuint>();
+    /*floatKeys=new std::vector<GLuint>();
     texKeys=new std::vector<GLuint>();
     vecKeys=new std::vector<GLuint>();
     matKeys=new std::vector<GLuint>();
@@ -34,9 +35,31 @@ Material::Material(GLuint sID){
     textures=new std::vector<GLuint>();
     vectors=new std::vector<glm::vec3>();
     matrices=new std::vector<glm::mat4>();
-    matModelR=new std::vector<bool>();
+    matModelR=new std::vector<bool>();*/
+    //uniforms=new std::map<const char*,GLuint>();
+    floats=new std::map<GLuint,float>();
+    vectors=new std::map<GLuint,glm::vec3>();
+    textures=new std::map<GLuint,GLuint>();
+    matrices=new std::map<GLuint,glm::mat4>();
+    matModelR=new std::map<GLuint,bool>();
+    types=new std::map<GLuint,GLenum>();
     shaderProgram=sID;
     MVPloc=glGetUniformLocation(shaderProgram,"MVP");
+
+    GLint numActiveUniforms = 0;
+    GLint size; // size of the variable
+    GLenum type; // type of the variable (float, vec3 or mat4, etc)
+
+    const GLsizei bufSize = 16; // maximum name length
+    char name[bufSize]; // variable name in GLSL
+    GLsizei length; // name length
+    glGetProgramiv(shaderProgram, GL_ACTIVE_UNIFORMS, &numActiveUniforms);
+    for(GLint i=0;i<numActiveUniforms;i++){
+        glGetActiveUniform(shaderProgram, i, bufSize, &length, &size, &type, name);
+        //fprintf(stderr,"Found uniform %d named %s\n",i,name); 
+        //uniforms->emplace(name,i);
+        types->emplace(i,type);
+    }
 }
 
 static void gl_check_error(const char *msg)
@@ -52,69 +75,86 @@ void Material::Apply(glm::mat4 M,glm::mat4 VP){
     glm::mat4 MVP=VP*M;
     glUniformMatrix4fv(MVPloc, 1,GL_FALSE,&MVP[0][0]);
 
-    uint i;
-    for(i=0;i<floatKeys->size();i++)
-        glUniform1f((*floatKeys)[i],(*floats)[i]);
-    for(i=0;i<texKeys->size();i++){
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,(*textures)[i]);
-        glUniform1i((*texKeys)[i],0);
+    GLuint i;
+    //std::pair <GLuint,float> fl_pair;
+    //std::pair <GLuint,glm::vec3> vec_pair;
+    //std::pair <GLuint,GLuint> tex_pair;
+    //std::pair <GLuint,glm::mat4> mat_pair;
+    for( auto const &fl_pair : *floats ){
+        glUniform1f(fl_pair.first,fl_pair.second);
     }
+    
+    i=0;
+    for (auto const &tex_pair : *textures){
+        glActiveTexture(GL_TEXTURE0+i);
+        glBindTexture(GL_TEXTURE_2D,tex_pair.second);
+        glUniform1i(tex_pair.first,i);
+        //fprintf(stderr,"Applied OpenGL texture %d and shader uniform %d to slot %d\n",tex_pair.second,tex_pair.first,i);
+        i++;
+    }
+    //fprintf(stderr,"Applied %d textures, texmap size is %d\n",i,textures->size());
     glm::vec3 v;
-    for(i=0;i<vecKeys->size();i++){
-        v=(*vectors)[i];
-        glUniform3f((*vecKeys)[i],v[0],v[1],v[2]);
+    for(auto const &vec_pair : *vectors){
+        //v=(*vectors)[i];
+        glUniform3f(vec_pair.first,vec_pair.second[0],vec_pair.second[1],vec_pair.second[2]);
     }
     //gl_check_error("Material::apply:mid");
 
     glm::mat4 mat;
-    for(i=0;i<matKeys->size();i++){
-        mat=((*matrices)[i]);
-        if ((*matModelR)[i])
+    for(auto const &mat_pair : *matrices){
+        mat=mat_pair.second;
+        if ((*matModelR)[mat_pair.first])
             mat=mat*M;
-        glUniformMatrix4fv((*matKeys)[i],1,GL_FALSE,&mat[0][0]);
+        glUniformMatrix4fv(mat_pair.first,1,GL_FALSE,&mat[0][0]);
     }
     //glBindTexture(GL_TEXTURE_2D,1);
     //glUniform1i(1,0);
     //gl_check_error("Material::apply:done");
+    
 }
 
 bool Material::SetFloat(const char* key,float toSet){
     GLint loc=glGetUniformLocation(shaderProgram, key);
-    if (loc<0)
+    /*if (loc<0)
         return false;
     floatKeys->push_back(loc);
-    floats->push_back(toSet);
+    floats->push_back(toSet);*/
+
+    if (loc<0){
+        return false;
+    }
+    if ((*types)[loc]!=GL_FLOAT) return false;
+    (*floats)[loc]=toSet;
     return true;
 }
 
 bool Material::SetTexture(const char* key,GLuint toSet){
-    GLint loc=glGetUniformLocation(shaderProgram, key);
-    //fprintf(stderr,"Found tex key %s at %d\n",key,toSet);
-    if (loc<0)
+
+    GLint loc=glGetUniformLocation(shaderProgram,key);
+    //fprintf(stderr,"Attempting texture %s with . Loc is %d\n",key,loc);
+    if(loc<0){
         return false;
-    texKeys->push_back(loc);
-    textures->push_back(toSet);
+    }
+    if ((*types)[loc]!=GL_SAMPLER_2D) return false;
+    (*textures)[loc]=toSet;
+    //fprintf(stderr,"Set texture %s (OGL ID %d) to uniform %d, new size %d\n",key,toSet,loc,textures->size());
     return true;
 }
 
 bool Material::SetVector(const char* key,glm::vec3 *toSet){
-    GLint loc=glGetUniformLocation(shaderProgram, key);
-    //fprintf(stderr,"location of %s is %d\n",key,loc);
-    if (loc<0)
-        return false;
-    vecKeys->push_back(loc);
-    vectors->push_back(*toSet);
+    //if (!uniforms->count(key)) return false;
+    GLint loc=glGetUniformLocation(shaderProgram,key);
+    if ((*types)[loc]!=GL_FLOAT_VEC3) return false;
+    (*vectors)[loc]=*toSet;
     return true;
 }
 
 bool Material::SetMatrix(const char* key,glm::mat4 *toSet,bool modelRelative){
     GLint loc=glGetUniformLocation(shaderProgram,key);
-    if(loc<0)
-        return false;
-    matKeys->push_back(loc);
-    matrices->push_back(*toSet);
-    matModelR->push_back(modelRelative);
+    if(loc<0) return false;
+    if ((*types)[loc]!=GL_FLOAT_MAT4) return false;
+    (*matrices)[loc]=*toSet;
+    (*matModelR)[loc]=modelRelative;
     return true;
 }
 

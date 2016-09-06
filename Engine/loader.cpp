@@ -103,20 +103,20 @@ GLuint LoadTextureFromFile(string imagePath, GLuint imageType){
   fprintf(stderr,"Attempting image load from %s...",imagePath.c_str());
   SDL_Surface *surface;
   SDL_Surface *image_surface=IMG_Load(imagePath.c_str());
-  SDL_PixelFormat sdl_pixel_format;
+  //SDL_PixelFormat sdl_pixel_format;
   if (image_surface==NULL){
     //SDL couldn't load image
     fprintf(stderr, " Failure\n%s\n", SDL_GetError());
     return 0;
   }
-  sdl_pixel_format.palette = NULL;
+  /*sdl_pixel_format.palette = NULL;
   sdl_pixel_format.format = SDL_PIXELFORMAT_RGB888;
   sdl_pixel_format.BitsPerPixel = 24;
   sdl_pixel_format.BytesPerPixel = 8;
   sdl_pixel_format.Rmask=0x0000ff;
   sdl_pixel_format.Gmask=0x00ff00;
-  sdl_pixel_format.Bmask=0xff0000;
-  surface = SDL_ConvertSurface(image_surface, &sdl_pixel_format, 0 );
+  sdl_pixel_format.Bmask=0xff0000;*/
+  surface = SDL_ConvertSurfaceFormat(image_surface,SDL_PIXELFORMAT_RGB888,0);//SDL_ConvertSurface(image_surface, &sdl_pixel_format, 0 );
   if (surface==NULL){
     //SDL couldn't convert image
     fprintf(stderr, " Failure to convert image:\n%s\n", SDL_GetError());
@@ -142,7 +142,7 @@ GLuint LoadTextureFromFile(string imagePath, GLuint imageType){
   fprintf(stderr,"%s",SDL_GetError());
   //glPixelStorei(GL_UNPACK_ALIGNMENT,4);	
   //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,16/*surface->w*/,16/*surface->h*/,0,GL_RGB,GL_UNSIGNED_BYTE,surface->pixels);
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,surface->w,surface->h,0,GL_RGB,GL_UNSIGNED_BYTE,surface->pixels);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,surface->w,surface->h,0,GL_RGBA,GL_UNSIGNED_BYTE,surface->pixels);
   //Set filtering mode for when pixels smaller and bigger than screen
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
@@ -362,7 +362,7 @@ Material* LoadMaterial(const char *name, const char* projectFolder){
             vecVal=stov3(value);
             toReturn->SetVector(key.c_str(),vecVal);
         }else{
-            sprintf(texPath,"%s/Textures/%s",projectFolder,key.c_str());
+            sprintf(texPath,"%s/Textures/%s",projectFolder,value.c_str());
             texID=LoadTextureFromFile(texPath,GL_RGB);
             if (texID!=0)
                 toReturn->SetTexture(key.c_str(),texID);

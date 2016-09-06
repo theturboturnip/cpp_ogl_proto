@@ -23,7 +23,7 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale=1.0);
 int LoadModelFromFile(string modelPath, GLuint buffers[3], glm::mat3 *transform=NULL, glm::vec3 *translation=NULL);
 Material* LoadMaterial(const char* name, const char* projectFolder);
 Mesh* LoadMesh(const char* name, const char* projectFolder);
-
+glm::vec3 *stov3(string s);
 
 #endif // __INC_LOADER_H__
 
