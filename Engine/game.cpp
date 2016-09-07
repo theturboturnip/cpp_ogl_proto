@@ -1,5 +1,15 @@
 #include "game.h"
 
+#define NUM_KEYS 11
+static int keys[NUM_KEYS] = {
+SDLK_w, SDLK_s,
+SDLK_a, SDLK_d,
+SDLK_SPACE, SDLK_LSHIFT,
+SDLK_UP, SDLK_DOWN,
+SDLK_LEFT, SDLK_RIGHT,
+SDLK_TAB
+};
+
 int LoadProject(){
     //Create GameWindow
     //read config.cfg in projectFolder
@@ -57,28 +67,28 @@ void InitGraphics(){
     glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+    glEnable(GL_BLEND);
 }
 
-
-int GameLoop(){
-    if (1) {
-        GLenum err;
-        while ((err = glGetError()) != GL_NO_ERROR) {
-            fprintf(stderr,"Game a OpenGL error: %d\n",err);
-        }
+void RenderingPass(ShadowLight *l,glm::mat4 *VP,bool additive=false){
+    //glm::mat4 *VP=&(scene->camera->VP);
+     glClear(GL_DEPTH_BUFFER_BIT);
+    if (additive){
+        glBlendFunc(GL_ONE,GL_ONE);
+    }else
+        glBlendFunc(GL_ONE,GL_ZERO);
+    for(uint i=0;i<scene->objects->size();i++){
+        Material *m=(*scene->objects)[i].mat;
+        if(l!=NULL)
+            l->SetupMaterial(m);
+        (*scene->objects)[i].Draw(VP);
     }
+}
+
+int RenderScene(glm::mat4 *VP){
     window->ClearWindow();
-    glm::mat4 *VP;
     uint i,j,sLightCount;
     ShadowLight *l;
-    
-    //Basic Light Rendering Steps:
-    //If the light does shadowing:
-    //    Query for VP
-    //    Switch current renderbuffer to that of the light
-    //    Render all objects
-    //    Switch renderbuffer back
-    //    Render all objects again
     
     sLightCount=scene->sLights->size();
 
@@ -91,7 +101,7 @@ int GameLoop(){
         for(i=0;i<scene->objects->size();i++){
             (*scene->objects)[i].Draw(VP,&(*scene->shadowMat));
         }
-        l->SaveTexture();
+        //l->SaveTexture();
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -99,22 +109,72 @@ int GameLoop(){
     window->ClearWindow();
 
     VP=&(scene->camera->VP);
-    for(i=0;i<scene->objects->size();i++){
-        Material *m=(*scene->objects)[i].mat;
-        //Object o=(*scene->objects)[i];
-        if(sLightCount>0&&m!=NULL){
-            (*scene->sLights)[0]->SetupMaterial(m);
-            //o.mat->SetTexture("SLightDepthMap",((*scene->sLights)[0]->depthMapTex));
-            //o.mat->SetVector("SLightColor",&((*scene->sLights)[0]->color));
-            //o.mat->SetFloat("SLightFarClip",scene->camera->farClip);
-            //o.mat->SetFloat("SLightNearClip",scene->camera->nearClip);
-        }
-        
-        (*scene->objects)[i].Draw(VP);
+
+    //Simple multi-light rendering. Do one base pass, then 1x additive pass per light.
+    bool additive=false;
+    //fprintf(stderr,"%d\n",sLightCount);
+    for(i=0;i<sLightCount;i++){
+        RenderingPass((*scene->sLights)[i],VP,additive);
+        //fprintf(stderr,"%d\n",additive);
+        additive=true;
     }
+    glBlendFunc(GL_ONE,GL_ZERO);//Make sure it works for the shadow pass
 
     window->Flip();
     return 1;
+}
+
+void HandleInput(int *keys_down,float deltaTime){
+    float cameraHorizMoveSpeed=2.0f,cameraVertMoveSpeed=1.0f;
+    glm::vec3 *moveDir=new glm::vec3(0);
+    if (keys_down[0]) moveDir->z=1;
+    if (keys_down[1]) moveDir->z=-1;
+    if (keys_down[2]) moveDir->x=1;
+    if (keys_down[3]) moveDir->x=-1;
+    //*moveDir=glm::normalize(moveDir);
+    *moveDir=(*moveDir*cameraHorizMoveSpeed);
+    if (keys_down[4]) moveDir->y=-cameraVertMoveSpeed;
+    if (keys_down[5]) moveDir->y=cameraVertMoveSpeed;
+    glm::rotateY(*moveDir,scene->camera->t->rotation.y);
+    //moveDir=glm::rotate(glm::radians(scene->camera->t->rotation.y),glm::vec3(0,1,0))*moveDir;
+    *moveDir=(*moveDir*deltaTime);
+    //fprintf(stderr,"%f %f %f\n",moveDir->x,moveDir->y,moveDir->z);
+    (scene->camera->t->position)=(scene->camera->t->position)+*moveDir;
+    if (keys_down[10]){
+        scene->IdentifyObjects(projectFolder);
+        scene->camera->SetAspectRatio(window->aspect);
+    }
+    scene->camera->CalculateVP();
+}
+
+void GameLoop(){
+    bool shouldEnd=false;
+    SDL_Event e;
+    glm::mat4 *VP;
+    int keys_down[NUM_KEYS];
+    uint i;
+    float deltaTime=1/60.f,startTime;
+    while(!shouldEnd){
+        startTime=SDL_GetTicks();
+        while (SDL_PollEvent(&e)!=0){
+            if (e.type==SDL_QUIT)
+                shouldEnd=true;
+            if (e.type==SDL_KEYDOWN) {
+                for (i=0; i<sizeof(keys)/sizeof(e.key.keysym.sym); i++) {
+                    if (e.key.keysym.sym==keys[i]) keys_down[i]=1;
+                }
+            }
+            if (e.type==SDL_KEYUP) {
+                for (i=0; i<sizeof(keys)/sizeof(e.key.keysym.sym); i++) {
+                    if (e.key.keysym.sym==keys[i]) keys_down[i]=0;
+                }
+            }
+        }
+        HandleInput(keys_down,deltaTime);
+        RenderScene(VP);
+        deltaTime=(SDL_GetTicks()-startTime)/1000;
+        //fprintf(stderr,"%f\n",(1/deltaTime));
+    }
 }
 
 int main(int argc,char* argv[]){
@@ -128,14 +188,7 @@ int main(int argc,char* argv[]){
     InitGraphics();
 
     GameLoop();
-    bool shouldEnd=false;
-    SDL_Event e;
-    while(!shouldEnd){
-        while (SDL_PollEvent(&e)!=0){
-            if (e.type==SDL_QUIT)
-                shouldEnd=true;
-        }
-    }
+    
     window->End();
     return 1;
 }

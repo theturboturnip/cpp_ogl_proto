@@ -137,8 +137,8 @@ void ShadowLight::ResetMaterial(Material *mat){
 SpotLight::SpotLight(glm::vec3 *pos,glm::vec3 *rot, const char* _type,std::map<std::string,std::string> *_data) : ShadowLight(pos,rot,_type,_data){
     FindP(); //This is required, as in the superclass constructor the superclass version will be called no matter what.
     blurStart=std::stof((*data)["AttenStart"]);
-    if (blurStart>1)
-        blurStart=1;
+    if(blurStart>1)
+        blurStart=1.5f; //We assume that if it's >1 we don't want attenuation
 }
 
 void SpotLight::FindP(){

@@ -28,12 +28,13 @@ void PlaygroundScene::IdentifyObjects(const char *projectFolder){
             mesh=NULL;
             type="";
             fprintf(stderr,"\nLoading new object\n");
-        }else if (line.compare("OBJECT_END")==0){
+        }else if (line.compare("OBJECT_END")==0&&has_object){
             has_object=false;
             //Add all known data to the object
             if (type.compare("Camera")==0){
                 camera=new Camera(pos,rot,scale,type.c_str(),data);
             }else if (type.compare("SpotLight")==0){
+                fprintf(stderr,"Found spotlight!\n");
                 SpotLight *l=new SpotLight(pos,rot,type.c_str(),data);
                 sLights->push_back(l);
             }else{

@@ -11,6 +11,10 @@ in vec4 shadowmapPos;
 in vec2 uv;
 out vec3 color;
 
+float pow5(float x){
+    return x*x*x*x*x;
+}
+
 float LightLevel(){
     float shadowmapPosX=shadowmapPos.x/shadowmapPos.w/2.0f+0.5f;
      float shadowmapPosY=shadowmapPos.y/shadowmapPos.w/2.0f+0.5f;
@@ -24,11 +28,14 @@ float LightLevel(){
      //Else use spotlight attenuation
      //if d=1 a=0
      //if d<=bs a=1
-     //else a is lerped from 1 to 0 by 1-(d-bs)/(1-bs)
-     //a=1-max(d-bs,0)/(1-bs)
+     //else a=1-max(d-bs,0)/(1-bs)
      //if bs>1.5 a=1 no matter what
      float d=length(shadowmapPos.xy/shadowmapPos.w);
-     float atten=1-max(d-SLightSpotAttenStart,0)/(1.0-SLightSpotAttenStart);
+     //if SLightSpotAttenStart==1 decrease slightly
+     float spotStart=SLightSpotAttenStart;//max(mix(SLightSpotAttenStart,1.0001,pow5(SLightSpotAttenStart)),SLightSpotAttenStart);
+     //d=1.1, ss=5
+     //
+     float atten=1-(max(d-spotStart,0)/(1.001-spotStart));
      return lightLevel*atten;
 }
 
