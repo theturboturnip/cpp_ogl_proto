@@ -30,13 +30,26 @@ public:
 class ShadowLight : public Object{
 public:
     ShadowLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type="SLight",std::map<std::string,std::string> *_data=NULL);
-    virtual void FindVP();
+    virtual void FindP();
+    glm::mat4 FindVP();
     void SaveTexture();
     void InitShadowRender();
-    glm::mat4 VP;
+    glm::mat4 P;
     GLuint depthMapFBO,depthMapTex;
     uint resX,resY;
     glm::vec3 color;
+    glm::mat4 VP;
+    virtual void SetupMaterial(Material *mat);
+    virtual void ResetMaterial(Material *mat);
+};
+
+class SpotLight : public ShadowLight{
+public:
+    SpotLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type="SpotLight",std::map<std::string,std::string> *_data=NULL);
+    void FindP();
+    void SetupMaterial(Material *mat);
+    void ResetMaterial(Material *mat);
+    float FOV,nearClip,farClip,blurStart;
 };
     
 #endif

@@ -14,7 +14,7 @@ void PlaygroundScene::IdentifyObjects(const char *projectFolder){
     Object *o;
     string type;
     objects=new vector<Object>();
-    sLights=new vector<ShadowLight>();
+    sLights=new vector<ShadowLight*>();
     map<string,string> *data;
     for(uint i=0;i<lines->size();i++){
         line=(*lines)[i];
@@ -33,9 +33,9 @@ void PlaygroundScene::IdentifyObjects(const char *projectFolder){
             //Add all known data to the object
             if (type.compare("Camera")==0){
                 camera=new Camera(pos,rot,scale,type.c_str(),data);
-            }else if (type.compare("SLight")==0){
-                ShadowLight *l=new ShadowLight(pos,rot,type.c_str(),data);
-                sLights->push_back(*l);
+            }else if (type.compare("SpotLight")==0){
+                SpotLight *l=new SpotLight(pos,rot,type.c_str(),data);
+                sLights->push_back(l);
             }else{
                 o=new Object(pos,rot,scale,mesh,mat,type.c_str(),data);
                 //Push object onto list

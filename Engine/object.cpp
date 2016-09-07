@@ -49,7 +49,7 @@ ShadowLight::ShadowLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type,std::ma
     resX=std::stoi((*data)["ResolutionX"]);
     resY=std::stoi((*data)["ResolutionY"]);
     color=*stov3((*data)["LightColor"]);
-    FindVP();
+    FindP();
     //Gen rendering resources
     glGenFramebuffers(1,&depthMapFBO);
     
@@ -92,8 +92,8 @@ void ShadowLight::InitShadowRender(){
     }
 }
 
-void ShadowLight::FindVP(/*int resX,int resY*/){
-    VP=glm::perspective(glm::radians(110.0f),((float)resX)/resY,0.3f,50.0f)*glm::inverse((t->Evaluate()));
+void ShadowLight::FindP(/*int resX,int resY*/){
+    P=glm::perspective(glm::radians(110.0f),((float)resX)/resY,0.3f,50.0f);
 }
 
 void ShadowLight::SaveTexture() {
@@ -115,4 +115,50 @@ void ShadowLight::SaveTexture() {
     free(image);
     free(raw_img);
     //exit(4);
+}
+
+glm::mat4 ShadowLight::FindVP(){
+    VP=P*glm::inverse(t->Evaluate());
+    return VP;
+}
+
+void ShadowLight::SetupMaterial(Material *mat){
+    if (mat==NULL) return;
+    mat->SetMatrix("SLightMVP",&VP);
+    mat->SetTexture("SLightDepthMap",depthMapTex);
+    mat->SetVector("SLightColor",&color);
+}    
+
+void ShadowLight::ResetMaterial(Material *mat){
+    //Nothing happens here as all the parameters set in SetupMaterial
+    //have to be changed for the next light anyway
+}
+
+SpotLight::SpotLight(glm::vec3 *pos,glm::vec3 *rot, const char* _type,std::map<std::string,std::string> *_data) : ShadowLight(pos,rot,_type,_data){
+    FindP(); //This is required, as in the superclass constructor the superclass version will be called no matter what.
+    blurStart=std::stof((*data)["AttenStart"]);
+    if (blurStart>1)
+        blurStart=1;
+}
+
+void SpotLight::FindP(){
+    FOV=std::stof((*data)["FOV"]);
+    nearClip=std::stof((*data)["NearClip"]);
+    farClip=std::stof((*data)["FarClip"]);
+    P=glm::perspective(glm::radians(FOV),((float)resX)/resY,nearClip,farClip);
+}
+
+void SpotLight::SetupMaterial(Material *mat){
+    if (mat==NULL) return;
+    mat->SetMatrix("SLightMVP",&VP);
+    mat->SetTexture("SLightDepthMap",depthMapTex);
+    mat->SetVector("SLightColor",&color);
+    if (mat->SetFloat("SLightNearClip",nearClip))
+        mat->SetFloat("SLightFarClip",farClip);
+    mat->SetFloat("SLightSpotAttenStart",blurStart);
+}
+
+void SpotLight::ResetMaterial(Material *mat){
+    if(mat==NULL) return;
+    mat->SetFloat("SLightSpotAttenStart",2); //Because of the equation used for spotlight attenuation any value > root2 means no attenuation.
 }
