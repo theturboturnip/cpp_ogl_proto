@@ -1,10 +1,7 @@
-#ifndef __INCLUDED_CONFIG__
-#define __INCLUDED_CONFIG__
+#ifndef __INC_PLAY_FILE_H__
+#define __INC_PLAY_FILE_H__
+
 #include "includes.h"
-#include "object.h"
-#include "mesh.h"
-#include <string>
-#include <vector>
 
 using namespace std;
 class PlaygroundFile{
@@ -14,19 +11,6 @@ public:
     void ParseFile(ifstream *file);
     vector<string> *keys,*values,*lines;
     string IdentifyValue(const char* key);
-    void SplitString(string &str,char delim,vector<string> *v);
-};
-
-class PlaygroundScene : public PlaygroundFile{
-public:
-    PlaygroundScene(const char* filename);
-    PlaygroundScene(ifstream *file);
-    void IdentifyObjects(const char* projectFolder); 
-    glm::vec3* stov3(string s);
-    vector<Object> *objects;
-    vector<ShadowLight> *sLights;
-    Material *shadowMat;
-    Camera *camera;
 };
     
 #endif

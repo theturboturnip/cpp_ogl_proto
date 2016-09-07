@@ -1,6 +1,4 @@
 #include "object.h"
-#include "includes.h"
-#include "loader.h"
 
 Object::Object(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *scale,Mesh *m,Material *material,const char* _type,std::map<std::string,std::string> *_data){
     if(scale==NULL)

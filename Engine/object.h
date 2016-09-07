@@ -1,8 +1,11 @@
-#ifndef __INCLUDED_OBJECT__
-#define __INCLUDED_OBJECT__
+#ifndef __INC_OBJECT_H__
+#define __INC_OBJECT_H__
+
 #include "includes.h"
 #include "mesh.h"
-#include <map>
+#include "material.h"
+#include "transform.h"
+
 class Object{
 public:
     Object(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *scale=NULL,Mesh *m=NULL,Material *material=NULL,const char* _type="",std::map<std::string,std::string> *_data=NULL);
@@ -23,17 +26,6 @@ public:
     void SetAspectRatio(float aspectRatio);
     float FOV,nearClip,farClip;
 };
-
-/*class SpotLight: public Camera{
-public:
-    Light(glm::vec3 *pos,glm::vec3 *rot,glm::vec3 *scale,const char* _type="Light",std::map<std::string,std::string> *_data=NULL);
-    GLuint shadowmapTexture,shadowRenderBuffer;
-}*/
-
-/*class PointLight: public Object{
-public:
-    PointLight(glm::vec3 *pos,const char* _type="Light",std::map<std::string,std::string> *_data=NULL);
-*/
 
 class ShadowLight : public Object{
 public:

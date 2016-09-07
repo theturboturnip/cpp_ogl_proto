@@ -7,7 +7,6 @@
 class GameWindow{ 
 public: 
     GameWindow(int width=640,int height=480,const char *name="Untitled",bool resizeable=false,bool verbose=true);
-    void CheckError(bool checkSDL=true,bool checkGL=true);
     //void UseShaderProgram(GLuint program);
     void SetClearColor(float r,float g,float b,float a=1.0f);
     void End(void);
@@ -22,7 +21,7 @@ private:
     bool VERBOSE,IS_ATTEMPTING;
     SDL_Window *SCREEN;
     SDL_GLContext GL_CONTEXT;
-    void StartAttempt(char *attemptString);
+    void StartAttempt(std::string attemptString);
     void EndAttempt(bool success=true);
     //glm::mat4 CalculateProjectionMatrix();
 };

@@ -1,42 +1,11 @@
 #include "game.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
-#include <string.h>
-//#include <sstream>
-#include <vector>
-#include <typeinfo>
-#include "playground_parser.h"
-
-
-//using namespace std;
-
-
-
-/*bool LoadObject(const char *name){
-    //Find the object file
-    char objectPath[256];
-    sprintf(objectPath,"%s/Objects/%s.object",projectFolder,name);
-    PlaygroundFile *objectFile=new PlaygroundFile(objectPath);
-    
-    //Get the material and mesh
-    Material *material=LoadMaterial(objectFile->IdentifyValue("MaterialName").c_str(),projectFolder);
-    Mesh *mesh=LoadMesh(objectFile->IdentifyValue("MeshName").c_str(),projectFolder);
-
-    //Create the object and send to the object vector
-    //Currently assuming pos rot and scale, it should be loaded from the object
-    glm::vec3 *pos=new glm::vec3(1,0,-10),*rot=new glm::vec3(0),*scale=new glm::vec3(1,1,1);
-    Object *o=new Object(pos,rot,scale,mesh,material);
-    objects->push_back(*o);
-    return true;
-}*/
 
 int LoadProject(){
     //Create GameWindow
     //read config.cfg in projectFolder
     char configFileLoc[256];
     sprintf(configFileLoc,"%s/config.cfg",projectFolder);
-    fprintf(stderr,"Looking for scene config at %s\n",configFileLoc);
+    fprintf(stderr,"\nLooking for scene config at %s\n",configFileLoc);
     std::ifstream configFile(configFileLoc);
     if (configFile==NULL){
         fprintf(stderr,"No config file found in project.\n");
@@ -61,7 +30,6 @@ int LoadProject(){
     window=new GameWindow(width,height,name,resizeable);
 
     //Find scene
-    //objects=new std::vector<Object>();
     std::string sceneName=config->IdentifyValue("StartScene");
     if(sceneName.compare("")==0){
         fprintf(stderr,"No starting scene was found so no objects will be loaded.\n");
@@ -69,14 +37,16 @@ int LoadProject(){
     }
     char sceneFileLoc[256];
     sprintf(sceneFileLoc,"%s/Scenes/%s.scene",projectFolder,sceneName.c_str());
-    fprintf(stderr,"Looking for scene file at %s\n",sceneFileLoc);
+    fprintf(stderr,"\nLooking for scene file at %s\n",sceneFileLoc);
     scene=new PlaygroundScene(sceneFileLoc);
 
     //Load Objects
-    
     scene->IdentifyObjects(projectFolder);
     scene->camera->SetAspectRatio(window->aspect);
     scene->camera->CalculateVP();
+
+    delete config;
+    //delete configFile;
 
     return 1;
 }
@@ -111,14 +81,7 @@ int GameLoop(){
     //    Render all objects again
     
     sLightCount=scene->sLights->size();
-    //fprintf(stderr,"%d",sLightCount);
-    //glClearDepth(0.5f);
-    if (1) {
-        GLenum err;
-        while ((err = glGetError()) != GL_NO_ERROR) {
-            fprintf(stderr,"Game b OpenGL error: %d\n",err);
-        }
-    }
+
     for(j=0;j<sLightCount;j++){
         
         l=&((*scene->sLights)[j]);
@@ -132,16 +95,8 @@ int GameLoop(){
     glBindFramebuffer(GL_FRAMEBUFFER,0);
     window->ApplyResolution();
     window->ClearWindow();
-    if (1) {
-        GLenum err;
-        while ((err = glGetError()) != GL_NO_ERROR) {
-            fprintf(stderr,"Game c OpenGL error: %d\n",err);
-        }
-    }
 
-    //glClearDepth(1);
     VP=&(scene->camera->VP);
-    //fprintf(stderr,"Object amount: %d\n",scene->objects->size());
     for(i=0;i<scene->objects->size();i++){
         Material *m=(*scene->objects)[i].mat;
         Object o=(*scene->objects)[i];
@@ -164,25 +119,6 @@ int GameLoop(){
         (*scene->objects)[i].Draw(VP);
     }
 
-
-    if (1) {
-        GLenum err;
-        while ((err = glGetError()) != GL_NO_ERROR) {
-            fprintf(stderr,"Game d OpenGL error: %d\n",err);
-        }
-    }
-	const char *error;
-    error = SDL_GetError();
-	if (*error != '\0') {
-		fprintf(stderr,"SDL Error: %s\n", error);
-		SDL_ClearError();
-	}
-    if (1) {
-        GLenum err;
-        while ((err = glGetError()) != GL_NO_ERROR) {
-            fprintf(stderr,"Game loop end OpenGL error: %d\n",err);
-        }
-    }
     window->Flip();
     return 1;
 }
@@ -195,19 +131,8 @@ int main(int argc,char* argv[]){
     projectFolder=argv[1];
     if (LoadProject()==0)
         return 0;
-    if (1) {
-        GLenum err;
-        while ((err = glGetError()) != GL_NO_ERROR) {
-            fprintf(stderr,"Game init a OpenGL error: %d\n",err);
-        }
-    }
     InitGraphics();
-    if (1) {
-        GLenum err;
-        while ((err = glGetError()) != GL_NO_ERROR) {
-            fprintf(stderr,"Game init b OpenGL error: %d\n",err);
-        }
-    }
+
     GameLoop();
     bool shouldEnd=false;
     SDL_Event e;

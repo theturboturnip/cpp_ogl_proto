@@ -1,17 +1,5 @@
-#define GL_GLEXT_PROTOTYPES
-#define GLM_FORCE_RADIANS
-
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <SDL_opengl.h>
-#include <SDL_image.h>
 #include "loader.h"
-#include "object.h"
-#include "mesh.h"
-#include <glm/gtc/matrix_transform.hpp> 
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+
 using namespace std;
 
 //All importing functions give a GLuint for referencing the loaded object.
@@ -307,7 +295,7 @@ int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale){
     PLAYGROUND FILES
                       */
 
-void SplitString(string& str, char delim,vector<string> *v) {
+/*void SplitString(string& str, char delim,vector<string> *v) {
     auto i = 0;
     auto pos = str.find(delim);
     while (pos != string::npos) {
@@ -318,18 +306,10 @@ void SplitString(string& str, char delim,vector<string> *v) {
       if (pos == string::npos)
          v->push_back(str.substr(i, str.length()));
     }
-}
+}*/
 
 
-glm::vec3* stov3(string s){
-    vector<string> *vecConvUtil=new vector<string>();
-    SplitString(s,',',vecConvUtil);
-    glm::vec3 *toReturn=new glm::vec3(0);
-    toReturn->x=stof((*vecConvUtil)[0]);
-    toReturn->y=stof((*vecConvUtil)[1]);
-    toReturn->z=stof((*vecConvUtil)[2]);
-    return toReturn;
-}
+
 
 
 Material* LoadMaterial(const char *name, const char* projectFolder){
@@ -358,7 +338,7 @@ Material* LoadMaterial(const char *name, const char* projectFolder){
             floatVal=std::stof(value);
             toReturn->SetFloat(key.c_str(),floatVal);
         }else if (value.find(',')!=std::string::npos){
-            fprintf(stderr,"Found vec3 %s for material with key %s\n",value.c_str(),key.c_str());
+            //fprintf(stderr,"Found vec3 %s for material with key %s\n",value.c_str(),key.c_str());
             vecVal=stov3(value);
             toReturn->SetVector(key.c_str(),vecVal);
         }else{

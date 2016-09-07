@@ -1,19 +1,11 @@
 #ifndef __INC_LOADER_H__
 #define __INC_LOADER_H__
 
-#define GL_GLEXT_PROTOTYPES
-#define GLM_FORCE_RADIANS
-
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <SDL_opengl.h>
-#include <SDL_image.h>
-#include <glm/gtc/matrix_transform.hpp> 
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include "mesh.h"
+#include "includes.h"
 #include "playground_parser.h"
+#include "material.h"
+#include "mesh.h"
+
 using namespace std;
 
 GLuint LoadShaderFromFile(string pathString,GLenum shaderType);
@@ -22,8 +14,6 @@ GLuint LoadTextureFromFile(string imagePath, GLuint imageType);
 int LoadModelFromFile(string modelPath, GLuint buffers[3], float scale=1.0);
 int LoadModelFromFile(string modelPath, GLuint buffers[3], glm::mat3 *transform=NULL, glm::vec3 *translation=NULL);
 Material* LoadMaterial(const char* name, const char* projectFolder);
-Mesh* LoadMesh(const char* name, const char* projectFolder);
-glm::vec3 *stov3(string s);
 
-#endif // __INC_LOADER_H__
+#endif
 

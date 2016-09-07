@@ -5,6 +5,9 @@
 GameWindow::GameWindow(int width,int height,const char *name,bool resizeable, bool verbose){
     IS_ATTEMPTING=false;
     VERBOSE=verbose;
+
+    if(verbose) fprintf(stderr,"\n");
+
     //Create SDL Window
     if (verbose) StartAttempt("create window");
     if (SDL_Init(SDL_INIT_EVERYTHING)!=0){
@@ -61,37 +64,20 @@ GameWindow::GameWindow(int width,int height,const char *name,bool resizeable, bo
     if (verbose) EndAttempt();
 }
 
-void GameWindow::StartAttempt(char *attemptString){
+void GameWindow::StartAttempt(std::string attemptString){
     if (!IS_ATTEMPTING){
         IS_ATTEMPTING=true;
-        fprintf(stderr, "Attempting to %s...\n\n",attemptString);
+        fprintf(stderr, "Attempting to %s...\n",attemptString.c_str());
     }
 }
 
 void GameWindow::EndAttempt(bool success){
     if (IS_ATTEMPTING){
-        fprintf(stderr, "\n...%s\n\n", success ? "Success" : "Faliure");
+        fprintf(stderr, "\n...%s\n", success ? "Success" : "Faliure");
         IS_ATTEMPTING=false;
     }
 }
-    
-void GameWindow::CheckError(bool checkSDL,bool checkGL){
-    if(checkSDL){
-        const char *error = SDL_GetError();
-        if (*error != '\0'){
-            if (IS_ATTEMPTING) EndAttempt(false);
-        	fprintf(stderr,"SDL Error: %s\n", error);
-        	SDL_ClearError();
-        }
-    }
-    if(checkGL){
-        GLuint GLError=glGetError();
-        if (GLError!=0){
-            if (IS_ATTEMPTING) EndAttempt(false);
-            fprintf(stderr,"OpenGL Error: %d\n",GLError);
-        }
-    }
-}
+   
 
 /*glm::mat4 GameWindow::CalculateProjectionMatrix(){
     float FOVrads=glm::radians(SCREEN_FOV),aspect=(float)SCREEN_WIDTH/(float)SCREEN_HEIGHT;
