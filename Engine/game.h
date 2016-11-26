@@ -11,7 +11,10 @@
 
 const char* projectFolder;
 int main(int argc,char* argv[]);
+int LoadProject();
+int LoadScene(bool createCamera=true);
 GameWindow *window=NULL;
 PlaygroundScene *scene;
+PlaygroundFile *config;
 
 #endif

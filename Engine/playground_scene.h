@@ -12,7 +12,7 @@ class PlaygroundScene : public PlaygroundFile{
 public:
     PlaygroundScene(const char* filename);
     PlaygroundScene(ifstream *file);
-    void IdentifyObjects(const char* projectFolder); 
+    void IdentifyObjects(const char* projectFolder,bool createCamera=true,Camera* replacementCamera=NULL); 
 //glm::vec3* stov3(string s);
     vector<Object> *objects;
     vector<ShadowLight*> *sLights;

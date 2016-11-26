@@ -1,13 +1,22 @@
 #include "game.h"
 
-#define NUM_KEYS 11
+#define NUM_KEYS 12
 static int keys[NUM_KEYS] = {
 SDLK_w, SDLK_s,
 SDLK_a, SDLK_d,
 SDLK_SPACE, SDLK_LSHIFT,
 SDLK_UP, SDLK_DOWN,
 SDLK_LEFT, SDLK_RIGHT,
-SDLK_TAB
+SDLK_TAB, SDLK_LALT
+};
+
+static int keys_down_only[NUM_KEYS] = {
+    0, 0,
+    0, 0,
+    0, 0,
+    0, 0,
+    0, 0,
+    1, 0
 };
 
 int LoadProject(){
@@ -25,7 +34,7 @@ int LoadProject(){
     int width=640,height=480;
     bool resizeable=true;
     const char* name="Window";
-    PlaygroundFile *config=new PlaygroundFile(&configFile);
+    config=new PlaygroundFile(&configFile);
 
     std::string newName=config->IdentifyValue("WindowName");
     if(newName.compare("")!=0)
@@ -39,6 +48,10 @@ int LoadProject(){
     
     window=new GameWindow(width,height,name,resizeable);
 
+    return LoadScene();
+}
+
+int LoadScene(bool sceneOnly){
     //Find scene
     std::string sceneName=config->IdentifyValue("StartScene");
     if(sceneName.compare("")==0){
@@ -49,13 +62,15 @@ int LoadProject(){
     sprintf(sceneFileLoc,"%s/Scenes/%s.scene",projectFolder,sceneName.c_str());
     fprintf(stderr,"\nLooking for scene file at %s\n",sceneFileLoc);
     scene=new PlaygroundScene(sceneFileLoc);
+    fprintf (stderr,"Scene file parsed!\n");
 
     //Load Objects
-    scene->IdentifyObjects(projectFolder);
+    scene->IdentifyObjects(projectFolder,sceneOnly);
     scene->camera->SetAspectRatio(window->aspect);
     scene->camera->CalculateVP();
+    fprintf(stderr,"Touched\n");
 
-    delete config;
+    //delete config;
     //delete configFile;
 
     return 1;
@@ -71,8 +86,7 @@ void InitGraphics(){
 }
 
 void RenderingPass(ShadowLight *l,glm::mat4 *VP,bool additive=false){
-    //glm::mat4 *VP=&(scene->camera->VP);
-     glClear(GL_DEPTH_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
     if (additive){
         glBlendFunc(GL_ONE,GL_ONE);
     }else
@@ -82,6 +96,8 @@ void RenderingPass(ShadowLight *l,glm::mat4 *VP,bool additive=false){
         if(l!=NULL)
             l->SetupMaterial(m);
         (*scene->objects)[i].Draw(VP);
+        if(l!=NULL)
+            l->ResetMaterial(m);
     }
 }
 
@@ -101,7 +117,6 @@ int RenderScene(glm::mat4 *VP){
         for(i=0;i<scene->objects->size();i++){
             (*scene->objects)[i].Draw(VP,&(*scene->shadowMat));
         }
-        //l->SaveTexture();
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -112,10 +127,8 @@ int RenderScene(glm::mat4 *VP){
 
     //Simple multi-light rendering. Do one base pass, then 1x additive pass per light.
     bool additive=false;
-    //fprintf(stderr,"%d\n",sLightCount);
     for(i=0;i<sLightCount;i++){
         RenderingPass((*scene->sLights)[i],VP,additive);
-        //fprintf(stderr,"%d\n",additive);
         additive=true;
     }
     glBlendFunc(GL_ONE,GL_ZERO);//Make sure it works for the shadow pass
@@ -127,7 +140,7 @@ int RenderScene(glm::mat4 *VP){
 void HandleInput(int *keys_down,float deltaTime){
     //Camera translation
     float cameraHorizMoveSpeed=2.0f,cameraVertMoveSpeed=1.0f;
-    glm::vec3 *moveDir=new glm::vec3(0);
+    glm::vec3 *moveDir=(new glm::vec3(0));
     if (keys_down[0]) moveDir->z=1;
     if (keys_down[1]) moveDir->z=-1;
     if (keys_down[2]) moveDir->x=1;
@@ -135,12 +148,13 @@ void HandleInput(int *keys_down,float deltaTime){
     *moveDir=(*moveDir*cameraHorizMoveSpeed);
     if (keys_down[4]) moveDir->y=-cameraVertMoveSpeed;
     if (keys_down[5]) moveDir->y=cameraVertMoveSpeed;
-    glm::rotateY(*moveDir,scene->camera->t->rotation.y);
+    //glm::rotateY(*moveDir,glm::radians(scene->camera->t->rotation.y));
+    *moveDir=glm::vec3((scene->camera->t->GetRotationMatrix())*glm::vec4(*moveDir,0));
     *moveDir=(*moveDir*deltaTime);
     (scene->camera->t->position)=(scene->camera->t->position)+*moveDir;
 
     //Camera rotation
-    float cameraRotateSensitivity=10.0f;
+    float cameraRotateSensitivity=30.0f;
     glm::vec3 *deltaLook=new glm::vec3(0);
     if (keys_down[6]) deltaLook->x=+1;
     if (keys_down[7]) deltaLook->x=-1;
@@ -149,41 +163,55 @@ void HandleInput(int *keys_down,float deltaTime){
     *deltaLook=*deltaLook*cameraRotateSensitivity*deltaTime;
     (scene->camera->t->rotation)=scene->camera->t->rotation+*deltaLook;
 
-    if (keys_down[10]){
-        scene->IdentifyObjects(projectFolder);
-        scene->camera->SetAspectRatio(window->aspect);
+    if (keys_down[10]&&!keys_down[11]){
+        fprintf(stderr,"Reset Scene\n");
+        LoadScene(false);
     }
     scene->camera->CalculateVP();
+
+    delete moveDir;
+    delete deltaLook;
 }
 
 void GameLoop(){
     bool shouldEnd=false;
     SDL_Event e;
     glm::mat4 *VP;
-    int keys_down[NUM_KEYS];
+    //fprintf(stderr,"Game loop\n");
+    int *keys_down=(int*)calloc(NUM_KEYS,sizeof(int));
     uint i;
     float deltaTime=1/60.f,startTime;
     while(!shouldEnd){
         startTime=SDL_GetTicks();
+        
+        for (i=0;i<NUM_KEYS;i++){
+            if (keys_down_only[i]&&keys_down[i]){
+                keys_down[i]=0;
+            }
+        }
+
         while (SDL_PollEvent(&e)!=0){
             if (e.type==SDL_QUIT)
                 shouldEnd=true;
-            if (e.type==SDL_KEYDOWN) {
+            else if (e.type==SDL_KEYDOWN) {
                 for (i=0; i<sizeof(keys)/sizeof(e.key.keysym.sym); i++) {
                     if (e.key.keysym.sym==keys[i]) keys_down[i]=1;
                 }
             }
-            if (e.type==SDL_KEYUP) {
+            else if (e.type==SDL_KEYUP) {
                 for (i=0; i<sizeof(keys)/sizeof(e.key.keysym.sym); i++) {
                     if (e.key.keysym.sym==keys[i]) keys_down[i]=0;
                 }
             }
         }
         HandleInput(keys_down,deltaTime);
-        RenderScene(VP);
+        #pragma GCC diagnostic ignored "-Wmaybe-uninitialized" 
+        RenderScene(VP); //VP isn't meant to be initialized, I just don't want to create a new matrix each tick
         deltaTime=(SDL_GetTicks()-startTime)/1000;
-        //fprintf(stderr,"%f\n",(1/deltaTime));
     }
+
+    delete keys_down;
+    delete VP;
 }
 
 int main(int argc,char* argv[]){

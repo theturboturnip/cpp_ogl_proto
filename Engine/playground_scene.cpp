@@ -4,7 +4,7 @@
 PlaygroundScene::PlaygroundScene(const char* filename) : PlaygroundFile(filename){}
 PlaygroundScene::PlaygroundScene(ifstream *file) : PlaygroundFile(file){}
 
-void PlaygroundScene::IdentifyObjects(const char *projectFolder){
+void PlaygroundScene::IdentifyObjects(const char *projectFolder,bool createCamera,Camera* replacementCamera){
     //Identify all objects located in our file
     string line,key,value;
     bool has_object=false;
@@ -13,8 +13,10 @@ void PlaygroundScene::IdentifyObjects(const char *projectFolder){
     Mesh *mesh;
     Object *o;
     string type;
+
     objects=new vector<Object>();
     sLights=new vector<ShadowLight*>();
+    camera=replacementCamera;
     map<string,string> *data;
     for(uint i=0;i<lines->size();i++){
         line=(*lines)[i];
@@ -48,17 +50,21 @@ void PlaygroundScene::IdentifyObjects(const char *projectFolder){
             value=(*values)[i];
             if (key.compare("Pos")==0){
                 pos=stov3(value);
+                fprintf(stderr,"Pos: %s\n",value.c_str());
             }else if (key.compare("Rot")==0){
                 rot=stov3(value);
+                fprintf(stderr,"Rot: %f,%f,%f\n",rot->x,rot->y,rot->z);
             }else if (key.compare("Scale")==0){
                 scale=stov3(value);
+                fprintf(stderr,"Scale: %s\n",value.c_str());
             }else if (key.compare("Mesh")==0){
                 mesh=LoadMesh(value.c_str(),projectFolder);
             }else if (key.compare("Material")==0){
-                mat=LoadMaterial(value.c_str(),projectFolder);
+                mat=LoadMaterial(value,projectFolder);
             }else if (key.compare("Type")==0){
                 type=value;
             }else{
+                fprintf(stderr,"Key %s Value %s\n",key.c_str(),value.c_str());
                 data->emplace(key,value);
             }
         }else{

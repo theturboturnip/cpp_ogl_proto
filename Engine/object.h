@@ -33,7 +33,7 @@ public:
     virtual void FindP();
     glm::mat4 FindVP();
     void SaveTexture();
-    void InitShadowRender();
+    virtual void InitShadowRender();
     glm::mat4 P;
     GLuint depthMapFBO,depthMapTex;
     uint resX,resY;
@@ -41,6 +41,7 @@ public:
     glm::mat4 VP;
     virtual void SetupMaterial(Material *mat);
     virtual void ResetMaterial(Material *mat);
+    virtual void SetupTexture();
 };
 
 class SpotLight : public ShadowLight{

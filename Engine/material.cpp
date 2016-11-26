@@ -1,5 +1,8 @@
 #include "material.h"
 
+//std::map<std::string,Material*> materials;
+std::map<std::string,Material*> *materials;
+
 Material::Material(GLuint sID){
     //Initialize class variables
     floats=new std::map<GLuint,float>();
@@ -93,4 +96,49 @@ bool Material::SetMatrix(const char* key,glm::mat4 *toSet,bool modelRelative){
     (*matrices)[loc]=*toSet;
     (*matModelR)[loc]=modelRelative;
     return true;
+}
+
+Material* LoadMaterial(std::string name, const char* projectFolder){
+    if(materials==NULL)
+        materials=new std::map<std::string,Material*>();
+    //Check if we have a material for this name already
+    if (materials->count(name)>0)
+        return (*materials)[name];
+    //Create a material based on a file
+    char matPath[256];
+    sprintf(matPath,"%s/Materials/%s.mat",projectFolder,name.c_str());
+    PlaygroundFile *matFile=new PlaygroundFile(matPath);
+    char vertShaderLoc[256],fragShaderLoc[256];
+    std::string vertName=matFile->IdentifyValue("VertShader"),fragName=matFile->IdentifyValue("FragShader");
+    sprintf(vertShaderLoc,"%s/Shaders/%s.glsl",projectFolder,vertName.c_str());
+    sprintf(fragShaderLoc,"%s/Shaders/%s.glsl",projectFolder,fragName.c_str());
+    GLuint sID=LoadShadersIntoProgram(vertShaderLoc,fragShaderLoc);
+    Material *toReturn=new Material(sID);
+    //We can load in textures and floats and vectors here if needed
+    std::string key,value;
+    char texPath[256];
+    float floatVal;
+    glm::vec3 *vecVal;
+    GLuint texID;
+    for(uint i=0;i<matFile->keys->size();i++){
+        key=(*(matFile->keys))[i];
+        value=(*(matFile->values))[i];
+        if (key.compare("FragShader")==0||key.compare("VertShader")==0||key.compare("")==0)
+            continue;
+        if (value.back()=='f'){
+            floatVal=std::stof(value);
+            toReturn->SetFloat(key.c_str(),floatVal);
+        }else if (value.find(',')!=std::string::npos){
+            //fprintf(stderr,"Found vec3 %s for material with key %s\n",value.c_str(),key.c_str());
+            vecVal=stov3(value);
+            toReturn->SetVector(key.c_str(),vecVal);
+        }else{
+            sprintf(texPath,"%s/Textures/%s",projectFolder,value.c_str());
+            texID=LoadTextureFromFile(texPath,GL_RGB);
+            if (texID!=0)
+                toReturn->SetTexture(key.c_str(),texID);
+        }
+    }
+    (*materials)[name]=toReturn;
+    return toReturn;
 }

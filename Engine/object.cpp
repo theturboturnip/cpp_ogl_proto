@@ -49,7 +49,9 @@ ShadowLight::ShadowLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type,std::ma
     resX=std::stoi((*data)["ResolutionX"]);
     resY=std::stoi((*data)["ResolutionY"]);
     color=*stov3((*data)["LightColor"]);
-    FindP();
+    //FindP();
+}
+void ShadowLight::SetupTexture(){
     //Gen rendering resources
     glGenFramebuffers(1,&depthMapFBO);
     
@@ -73,22 +75,12 @@ ShadowLight::ShadowLight(glm::vec3 *pos,glm::vec3 *rot,const char* _type,std::ma
 }
 
 void ShadowLight::InitShadowRender(){
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr,"First OpenGL error: %d\n",err);
-    }
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO); //Tell OpenGL to render to the depth map from now on
     glFramebufferTexture2D(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D, depthMapTex,0);
-    glClearColor(0.3,0.4,0.5,1.0);
     glClear(GL_DEPTH_BUFFER_BIT);
-    glClearColor(0.0,0.0,0.5,1.0);
     glViewport(0,0,resX,resY);
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr,"The frame buffer is not working\n");
-    }
-    
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(stderr,"OpenGL error: %d\n",err);
     }
 }
 
@@ -135,10 +127,11 @@ void ShadowLight::ResetMaterial(Material *mat){
 }
 
 SpotLight::SpotLight(glm::vec3 *pos,glm::vec3 *rot, const char* _type,std::map<std::string,std::string> *_data) : ShadowLight(pos,rot,_type,_data){
-    FindP(); //This is required, as in the superclass constructor the superclass version will be called no matter what.
+    FindP();
+    SetupTexture();
     blurStart=std::stof((*data)["AttenStart"]);
-    if(blurStart>1)
-        blurStart=1.5f; //We assume that if it's >1 we don't want attenuation
+    if(blurStart>1||blurStart<0)
+        blurStart=1.5f; //We assume that if it's >1 or <0 we don't want attenuation
 }
 
 void SpotLight::FindP(){
