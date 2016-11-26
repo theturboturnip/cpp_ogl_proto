@@ -125,21 +125,30 @@ int RenderScene(glm::mat4 *VP){
 }
 
 void HandleInput(int *keys_down,float deltaTime){
+    //Camera translation
     float cameraHorizMoveSpeed=2.0f,cameraVertMoveSpeed=1.0f;
     glm::vec3 *moveDir=new glm::vec3(0);
     if (keys_down[0]) moveDir->z=1;
     if (keys_down[1]) moveDir->z=-1;
     if (keys_down[2]) moveDir->x=1;
     if (keys_down[3]) moveDir->x=-1;
-    //*moveDir=glm::normalize(moveDir);
     *moveDir=(*moveDir*cameraHorizMoveSpeed);
     if (keys_down[4]) moveDir->y=-cameraVertMoveSpeed;
     if (keys_down[5]) moveDir->y=cameraVertMoveSpeed;
     glm::rotateY(*moveDir,scene->camera->t->rotation.y);
-    //moveDir=glm::rotate(glm::radians(scene->camera->t->rotation.y),glm::vec3(0,1,0))*moveDir;
     *moveDir=(*moveDir*deltaTime);
-    //fprintf(stderr,"%f %f %f\n",moveDir->x,moveDir->y,moveDir->z);
     (scene->camera->t->position)=(scene->camera->t->position)+*moveDir;
+
+    //Camera rotation
+    float cameraRotateSensitivity=10.0f;
+    glm::vec3 *deltaLook=new glm::vec3(0);
+    if (keys_down[6]) deltaLook->x=+1;
+    if (keys_down[7]) deltaLook->x=-1;
+    if (keys_down[8]) deltaLook->y=+1;
+    if (keys_down[9]) deltaLook->y=-1;
+    *deltaLook=*deltaLook*cameraRotateSensitivity*deltaTime;
+    (scene->camera->t->rotation)=scene->camera->t->rotation+*deltaLook;
+
     if (keys_down[10]){
         scene->IdentifyObjects(projectFolder);
         scene->camera->SetAspectRatio(window->aspect);
