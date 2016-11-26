@@ -8,9 +8,13 @@ uniform vec3 SLightColor;
 uniform float SLightSpotAttenStart;
 uniform float SLightNearClip,SLightFarClip;
 uniform float SLightDistAttenStart;
+uniform vec3 SLightDir;
 
 in vec4 shadowmapPos;
 in vec2 uv;
+in vec3 normal;
+in vec3 worldPos;
+
 out vec3 color;
 
 float pow5(float x){
@@ -27,11 +31,12 @@ float LightLevel(){
     float shadowmapPosY=shadowmapPos.y/shadowmapPos.w/2.0f+0.5f;
     vec2 newUV=vec2(shadowmapPosX,shadowmapPosY);
     float renderedZ=texture2D(SLightDepthMap,newUV).r;
-    renderedZ=InterpretShadowmap(renderedZ);
+    renderedZ=InterpretShadowmap(renderedZ); //Get the z-value from the shadowmap
     float currentZ=shadowmapPos.z/shadowmapPos.w;
-    currentZ=InterpretShadowmap(currentZ);
-    float lightLevel=1,bias=0.005f;
-    if(renderedZ<currentZ-bias)
+    currentZ=InterpretShadowmap(currentZ); //Get the pixel z-value
+    //
+    float lightLevel=clamp(dot(normal/length(normal),SLightDir),0,1),bias=0.005f; //Lambert NdotL, inaccuracy bias
+    if(renderedZ<currentZ+bias)
         lightLevel=0;
     //If blurStart<1 it isn't a spotlight
     //Else use spotlight attenuation
@@ -40,7 +45,6 @@ float LightLevel(){
     //else a=1-max(d-bs,0)/(1-bs)
     //if bs>1.5 a=1 no matter what
     float d=length(shadowmapPos.xy/shadowmapPos.w); //Get Length from centre
-    //if SLightSpotAttenStart==1 decrease slightly
     float atten=1-(max(d-SLightSpotAttenStart,0)/(1.001-SLightSpotAttenStart));
     return lightLevel*atten;
 }
@@ -48,9 +52,6 @@ float LightLevel(){
 void main(){
     vec3 inColor=DiffuseTint*texture2D(DiffuseTex,uv).rgb;
     color=SLightColor*inColor*LightLevel();
-    /*float ll=LightLevel();
-    //color=inColor*ll;
-    color=vec3(ll)*inColor;
-    color.r = 1-color.r;
-    color.r = 1-ll;*/
+
+    //color=texture2D(SLightDepthMap,uv).rgb;
 }

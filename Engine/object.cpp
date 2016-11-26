@@ -149,6 +149,8 @@ void SpotLight::SetupMaterial(Material *mat){
     if (mat->SetFloat("SLightNearClip",nearClip))
         mat->SetFloat("SLightFarClip",farClip);
     mat->SetFloat("SLightSpotAttenStart",blurStart);
+    glm::vec3 forward=glm::vec3(t->GetRotationMatrix()*(glm::vec4(0,0,1,0)));
+    mat->SetVector("SLightDir",&forward);
 }
 
 void SpotLight::ResetMaterial(Material *mat){

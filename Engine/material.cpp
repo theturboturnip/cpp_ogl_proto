@@ -33,7 +33,9 @@ void Material::Apply(glm::mat4 M,glm::mat4 VP){
     //Apply the material settings to OpenGL in preperation for rendering
     glUseProgram(shaderProgram);
     glm::mat4 MVP=VP*M;
-    glUniformMatrix4fv(MVPloc, 1,GL_FALSE,&MVP[0][0]);
+    glUniformMatrix4fv(MVPloc, 1,GL_FALSE,&MVP[0][0]); //This is here for compatibility
+    SetMatrix("M",&M,false);
+    SetMatrix("VP",&VP,false);
 
     GLuint i;
     for( auto const &fl_pair : *floats ){
